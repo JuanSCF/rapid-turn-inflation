@@ -17,7 +17,7 @@ L=251.327
 k00 = 1e11 # Mpc^-1 . '''this gives k_peak=1.287e13 Mpc^-1'''
 
 # initial and final k that will be integrated
-ki=9 
+ki=10 
 kf=14
 kikf=str(ki)+str(kf)
 ki=1*10**ki 
@@ -89,7 +89,7 @@ cwd = os.getcwd()
 data_directory = os.path.join(cwd, 'data')
 
 # File name to save bs data
-databs_file = f'full-x-{nkk}-steps-{spacing}-spacing-{kikf}.npy'
+databs_file = f'databs-{nkk}-steps-{spacing}-spacing-{kikf}-lambda-{L}.npy'
 
 # Construct the full path including the directory
 databs_file = os.path.join(data_directory, databs_file)
@@ -276,6 +276,9 @@ xi3 = np.zeros(len(MHsmall))
 print('xi3 calc')
 initial_time_str = time.strftime('%H:%M:%S', time.localtime(ti))
 print('Initial time:', initial_time_str)
+'''
+this for is optimizable
+'''
 for i in tqdm.tqdm(range(len(MHsmall))):
     xi3[i] = Intarray3D_vec(integrandxi3(MHsmall[i], k1, k2, x), k1, k2, x)
 
@@ -346,9 +349,12 @@ kzr=[]
 sigmaR2r=[]
 
 
-xi3max=max(xi3)
-xi3maxindex=np.argmax(xi3)
-kmax=kk[xi3maxindex]
+# to apply the perturbatibity condition I look for the maximum of abs(xi3) and its index.
+# then, i look for the value of the variance at that index.
+# afterwards, i find the maximun value for g that satisfies the perturbativity condition.
+xi3max=max(abs(xi3))
+xi3maxindex=np.argmax(abs(xi3))
+# kmax=kk[xi3maxindex]
 varmax=varsmall[xi3maxindex]
 S3max=xi3max/varmax**2
 g=12.*6.*varmax/(0.45**3.) /S3max
@@ -399,6 +405,10 @@ print('Initial time:', initial_time_str)
 f=np.zeros(size)
 fng=np.zeros(size)
 f2=np.zeros(size)
+'''
+this for may be optimizable.
+eye with the fact that the length of Mz is way bigger than the length of xi3
+'''
 for i in tqdm.tqdm(range(0, len(Mz))):
     a,b,c=intfdeM(Mz[i],MHsmall,varsmall,xi3)
     f[i] = Intarray_vec( a, LMH)
@@ -424,7 +434,7 @@ final_time_str = time.strftime('%H:%M:%S', time.localtime(tf))
 print(f"Computation of f(M) completed in {duration:.2f} seconds")
 
 
-np.savez( xi3_file, xi3=xi3,f=f, f2=f2, fng=fng, t_xi3_MH=t_xi3_MH)
+# np.savez( xi3_file, xi3=xi3,f=f, f2=f2, fng=fng, t_xi3_MH=t_xi3_MH)
 
 '''listo'''
 
