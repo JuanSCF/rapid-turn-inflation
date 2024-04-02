@@ -352,16 +352,21 @@ sigmaR2r=[]
 # to apply the perturbatibity condition I look for the maximum of abs(xi3) and its index.
 # then, i look for the value of the variance at that index.
 # afterwards, i find the maximun value for g that satisfies the perturbativity condition.
-xi3max=max(abs(xi3))
-xi3maxindex=np.argmax(abs(xi3))
+# xi3max=max(abs(xi3[14:]))
+# xi3maxindex=np.argmax(abs(xi3[14:]))
 # kmax=kk[xi3maxindex]
+
+kstar_index=np.argmin(np.abs(kzsmall-k00)) # with this line i'm neglecting k<k0
+xi3max=max(abs(xi3[kstar_index:]))
+xi3maxindex=np.argmax(abs(xi3[kstar_index:]))+kstar_index # accounting for the neglected indexes
+
 varmax=varsmall[xi3maxindex]
 S3max=xi3max/varmax**2
 g=12.*6.*varmax/(0.45**3.) /S3max
-xi3norm=xi3*g
+# xi3norm=xi3*g
 
-g=1e20
-xi3norm=xi3*g
+# g=1e20
+# xi3norm=xi3*g
 
 
 
