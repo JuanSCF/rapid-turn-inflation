@@ -16,17 +16,18 @@ deltaN=0.1
 n=1
 L0=251.327
 L=n*L0
+
 k00 = 1e11 # Mpc^-1 . '''this gives k_peak=1.287e13 Mpc^-1'''
 
 # initial and final k that will be integrated
-ki=10 
+ki=10
 kf=14
 kikf=str(ki)+str(kf)
 ki=1*10**ki 
 kf=1*10**kf
 
 Wf='Wthtf'
-nkk=100 #number of steps
+nkk=300 #number of steps
 spacing='geometric' # 'geometric' or 'linear'
 size=3000
 
@@ -96,11 +97,17 @@ databs_file = f'databs-{nkk}-steps-{spacing}-spacing-{kikf}-lambda-{L}.npy'
 # Construct the full path including the directory
 databs_file = os.path.join(data_directory, databs_file)
 
-xi3_file=f'xi3-{Wf}-{nkk}-steps-{kikf}-{spacing}-spacing-lambda-{n}L0'
+
+xi3_file=f'xi3-{Wf}-{nkk}-steps-{kikf}-{spacing}-spacing-lambda-{n}L0.npz'
 xi3_file = os.path.join(data_directory, xi3_file)
 
-databs=np.load(databs_file)
+# databs=np.load(databs_file)
 
+# np.savez( xi3_file, xi3=xi3,f=f, f2=f2, fng=fng, t_xi3_MH=t_xi3_MH)
+xi3_data=np.load(xi3_file)
+xi3=xi3_data['xi3']
+# f=xi3_data['f']
+# fng=xi3_data['fng']
 
 ############################################################################
 ############################# initialitiazion   ############################
@@ -150,6 +157,7 @@ for i in range(nkk):
 MHsmall = MHofk(kzsmall)
 
 Mz = np.geomspace(MHsmall[-1], 10**(-1)*MHsmall[0], size) 
+ 
 
 # Vectorized 1D integration
 def Intarray_vec(f, array):
@@ -167,26 +175,7 @@ def Intarray_vec(f, array):
     
     return integral
 
-# Vectorized 3D integration
-def Intarray3D_vec(f, array1, array2, array3):
 
-    # Calculate differentials for each dimension
-    diff1 = np.diff(array1)
-    diff2 = np.diff(array2)
-    diff3 = np.diff(array3)
-
-    # Calculate volumes for each cell
-    dV = np.multiply.outer(diff1, diff2)
-    dV = np.multiply.outer(dV, diff3)
-
-    # Calculate values for each corner of each cell
-    f_corners = f[:-1, :-1, :-1] + f[:-1, :-1, 1:] + f[:-1, 1:, :-1] + f[:-1, 1:, 1:] + \
-                f[1:, :-1, :-1] + f[1:, :-1, 1:] + f[1:, 1:, :-1] + f[1:, 1:, 1:]
-
-    # Multiply values with coefficients and sum them up
-    integral = 0.125 * np.sum(dV * f_corners)
-
-    return integral
 
 
 ########################################################################
@@ -203,7 +192,7 @@ elif Wf=='Wth':
     def W(k,q):        
         a=3.*(np.sin(k/q)-k/q*np.cos(k/q))/(k/q)**3. 
         return a
-#
+    #
     # tophat+transfer
 elif Wf=='Wthtf':
     csrad=np.sqrt(1./3.)
@@ -225,116 +214,89 @@ def Mcal(k,q):
 ########################################################################
 ########################################################################
 
-#
-#not vectorized
-#
+
+# vectorized
+# def int_xi3(m1,m2,wx):
+#     a = k00**2*0.5/12.*m1[:, None, None]*m2[None, :, None]*wx*databs
+#     return a
+
 # def integrandxi3(Mh,k1,k2,x):
-#     a=np.zeros_like(databs)
 #     k1=k1/k00
 #     k2=k2/k00
 #     q=kofMH(Mh)/k00
 #     m1=Mcal(k1,q)
 #     m2=Mcal(k2,q)
-#     for i in range(len(k1)):
-#         for j in range(len(k2)):
-#             for l in range(len(x)):
-#                 # if np.sqrt(k1[i]**2 + k2[j]**2 - 2*k1[i]*k2[j]*x[l]) < L*k00 and k1[i]<L*k00 and k2[j]<L*k00:
-#                 if np.sqrt(k1[i]**2 + k2[j]**2 - 2*k1[i]*k2[j]*x[l]) < L and k1[i]<L and k2[j]<L:
-#                     wx=np.zeros(len(x))
-#                     wx[l]=4./9.*q**(-2)*W(np.sqrt(k1[i]**2 + k2[j]**2 - 2*k1[i]*k2[j]*x[l]), q)
-#                     a[i,j,l] = k00**2*0.5*m1[i]*m2[j]*wx[l]*databs[i,j,l]
+#     k12x = np.sqrt(k1[:, None, None]**2 + k2[None, :, None]**2 - 2*k1[:, None, None]*k2[None, :, None]*x[None, None, :])
+#     wx=4./9.*q**(-2)*W(k12x,q)
+
+#     condition = (k12x < L) & (k1[:, None, None] < L) & (k2[None, :, None] < L)
+#     a=np.zeros_like(databs)
+#     a = np.where(condition, int_xi3(m1,m2,wx), a)
 #     return a
 
 
 
 
-
-# vectorized
-def int_xi3(m1,m2,wx):
-    a = k00**2*0.5/12.*m1[:, None, None]*m2[None, :, None]*wx*databs
-    return a
-
-def integrandxi3(Mh,k1,k2,x):
-    k1=k1/k00
-    k2=k2/k00
-    q=kofMH(Mh)/k00
-    m1=Mcal(k1,q)
-    m2=Mcal(k2,q)
-    k12x = np.sqrt(k1[:, None, None]**2 + k2[None, :, None]**2 - 2*k1[:, None, None]*k2[None, :, None]*x[None, None, :])
-    wx=4./9.*q**(-2)*W(k12x,q)
-
-    condition = (k12x < L) & (k1[:, None, None] < L) & (k2[None, :, None] < L)
-    a=np.zeros_like(databs)
-    a = np.where(condition, int_xi3(m1,m2,wx), a)
-    return a
-
-
-
-
 LMH=np.log(MHsmall)
-ti= time.time()
-xi3 = np.zeros(len(MHsmall))
+# ti= time.time()
+# xi3 = np.zeros(len(MHsmall))
 
-print('xi3 calc')
-initial_time_str = time.strftime('%H:%M:%S', time.localtime(ti))
-print('Initial time:', initial_time_str)
-'''
-this for is optimizable
-'''
-# MHsmall = MHsmall[::-1]
-'''
-integrar con respecto a k1/k00, k2/k00, x
-'''
-for i in tqdm.tqdm(range(len(MHsmall))):
-    xi3[i] = Intarray3D_vec(integrandxi3(MHsmall[i], k1, k2, x), k1, k2, x)
+# print('xi3 calc')
+# initial_time_str = time.strftime('%H:%M:%S', time.localtime(ti))
+# print('Initial time:', initial_time_str)
+# '''
+# this for is optimizable
+# try with pandas/polars and apply
+# '''
+# for i in tqdm.tqdm(range(len(MHsmall))):
+#     xi3[i] = Intarray3D_vec(integrandxi3(MHsmall[i], k1, k2, x), k1, k2, x)
 
-# def xi3calc():
-#     for i in tqdm.tqdm(range(len(MHsmall))):
-#         xi3[i] = Intarray3D_vec(integrandxi3(MHsmall[i], k1, k2, x), [k1, k2, x])
-
-tf = time.time()
-duration = tf - ti
-t_xi3_MH=duration
+# tf = time.time()
+# duration = tf - ti
+# t_xi3_MH=duration
 
 # Convert initial time to hh:mm:ss format
-final_time_str = time.strftime('%H:%M:%S', time.localtime(tf))
+# final_time_str = time.strftime('%H:%M:%S', time.localtime(tf))
 
-print(f"Computation of xi3 completed in {duration:.2f} seconds")
-
-
+# print(f"Computation of xi3 completed in {duration:.2f} seconds")
 
 
 
 
 
-# plt.loglog(kzsmall,abs(xi3),'o')
-# plt.plot(kzsmall,abs(xi3))
-# plt.title(f'abs( xi3(k) ), {Wf}')
-# plt.show()
 
-# plt.figure(00)
-# plt.plot(kzsmall,xi3)
-# plt.plot(kzsmall,xi3,'o')
-# plt.title(f'xi3(k), {Wf}')
-# plt.xscale('log')
-# plt.yscale('symlog')
-# plt.show()
 
-# plt.figure(00)
-# plt.plot(MHsmall,xi3)
-# plt.plot(MHsmall,xi3,'o')
-# plt.title(f'xi3(MH), {Wf}')
-# plt.xscale('log')
-# plt.yscale('symlog')
-# plt.show()
+plt.loglog(kzsmall,abs(xi3),'o')
+plt.plot(kzsmall,abs(xi3))
+plt.title(f'abs( xi3(k) ), {Wf}')
+plt.show()
+
+plt.figure(00)
+plt.plot(kzsmall,xi3)
+plt.plot(kzsmall,xi3,'o')
+plt.title(f'xi3(k), {Wf}')
+plt.xscale('log')
+plt.yscale('symlog')
+plt.show()
+
+# MHsmall = MHsmall[::-1]
+plt.figure(00)
+plt.plot(MHsmall,xi3)
+plt.plot(MHsmall,xi3,'o')
+plt.title(f'xi3(MH), {Wf}')
+plt.xscale('log')
+plt.yscale('symlog')
+plt.show()
 
 # np.save(xi3_file, xi3ofk)
-
 
 
 # to apply the perturbatibity condition I look for the maximum of abs(xi3) and its index.
 # then, i look for the value of the variance at that index.
 # afterwards, i find the maximun value for g that satisfies the perturbativity condition.
+# xi3max=max(abs(xi3[14:]))
+# xi3maxindex=np.argmax(abs(xi3[14:]))
+# kmax=kk[xi3maxindex]
 
 kstar_index=np.argmin(np.abs(kzsmall-k00)) # with this line i'm neglecting k<k0
 xi3max=max(abs(xi3[kstar_index:]))
@@ -342,18 +304,80 @@ xi3maxindex=np.argmax(abs(xi3[kstar_index:]))+kstar_index # accounting for the n
 
 varmax=varsmall[xi3maxindex]
 # S3max=xi3max/varmax**2
-# g = 6.*varmax/(deltac**3.) /S3max
+# g=12.*6.*varmax/(0.45**3.) /S3max
 
 # lets compute a g value for every xi3 value
 gvec = 6.*varsmall**3/(deltac**3.) /abs(xi3)
 
+mug=[]
+def ng_contribution(M,MHsmall,varsmall,xi3, g=1):
+    xi3=g*xi3
+    mu = (M/(C*MHsmall))
+    deltaM=mu**(1./gamma)+deltac
+    # deltaM=deltac
+    mug.append(mu)
+    return (1./6.)*xi3*((deltaM/varsmall)**3-3*deltaM/varsmall**2)
+
+Mzsmall = np.geomspace(MHsmall[-1], MHsmall[0], nkk)
+mugamma = (Mzsmall/(C*MHsmall[::-1]))**(1./gamma)
+# print(mugamma)
+
+# M_index=np.argmin(np.abs(Mz-k00))
+# Mzslice
+#add here something like for F in g*[0.9,0.8,0.7,0.6,0.5]: plot(ng_contribution(Mz,MHsmall,varsmall,xi3, g=F))
+# gvec=gvec/1.11
+
 plt.figure(00)
 plt.plot(MHsmall,gvec*xi3)
 plt.plot(MHsmall,gvec*xi3,'o')
-plt.title(f'g_i*xi3(MH), {Wf}')
+plt.title(f'g*xi3(MH), {Wf}')
 plt.xscale('log')
 plt.yscale('symlog')
+# plt.savefig(f'c:\\ZZZ\\Laburos\\Codes\\figuras\\xi3-MH-{gconst}g.png')
 plt.show()
+
+
+
+for i in range(30):
+    cont=ng_contribution(Mz[100*i],MHsmall,varsmall,xi3, g=gvec)
+    plt.plot(MHsmall,cont, 'o', label=f'M_pbh={Mz[100*i]}')
+    plt.plot(MHsmall,cont)
+    plt.xscale('log')
+    plt.yscale('symlog')
+    plt.title(f'ng contribution, g=*g')
+    plt.legend()
+    # plt.savefig(f'c:\\ZZZ\\Laburos\\Codes\\figuras\\ng-cont-g-{gconst}g.png')
+    plt.show()
+
+# for i in range(30):
+#     plt.plot(Mzsmall,mug[i]**(1./gamma), 'o', label=f'M_pbh={Mzsmall[i]}')
+#     plt.yscale('symlog')
+#     plt.xscale('log')
+#     plt.legend()
+#     plt.show()
+
+# plt.plot(MHsmall,cont, 'o')
+# plt.plot(MHsmall,cont)
+# plt.xscale('log')
+# plt.yscale('symlog')
+# plt.title(f'ng contribution, g=g, zoom')
+# # plt.savefig(f'c:\\ZZZ\\Laburos\\Codes\\figuras\\ng-cont-g-{gconst}g-zoom.png')
+# plt.ylim(-1e6,1e6)
+# plt.show()
+
+ng_cont_int=np.zeros(size)
+for i in range(size):
+    ng_cont_int[i]=Intarray_vec(ng_contribution(Mz[i],MHsmall,varsmall,xi3, g=gvec), LMH)
+# ng_cont=np.apply_along_axis(ng_contribution, 0, Mz, MHsmall, varsmall, xi3, g=1*g) 
+# LM=np.log(Mz)
+# plt.plot(kz[::-1],ng_cont, 'o')
+plt.plot(Mz,ng_cont_int, 'o')
+plt.yscale('symlog')
+plt.xscale('log')
+plt.title(f'integrated ng contribution, g=*g')
+# plt.savefig(f'c:\\ZZZ\\Laburos\\Codes\\figuras\\integrated-ng-cont-g-{gconst}g.png')
+plt.show()
+
 
 def intfdeM(M,MHsmall,varsmall,xi3 ):
     xi3=gvec*xi3

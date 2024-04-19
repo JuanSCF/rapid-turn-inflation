@@ -30,7 +30,7 @@ kikf=str(ki)+str(kf)
 ki=1*10**ki 
 kf=1*10**kf
 
-nkk=300 #number of steps
+nkk=100 #number of steps
 spacing='geometric' # 'geometric' or 'linear'
 
 

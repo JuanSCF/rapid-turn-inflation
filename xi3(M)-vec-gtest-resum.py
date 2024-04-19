@@ -13,9 +13,7 @@ import dask.array as da
 
 # power spectrum parameters
 deltaN=0.1
-n=1
-L0=251.327
-L=n*L0
+L=251.327
 k00 = 1e11 # Mpc^-1 . '''this gives k_peak=1.287e13 Mpc^-1'''
 
 # initial and final k that will be integrated
@@ -96,7 +94,7 @@ databs_file = f'databs-{nkk}-steps-{spacing}-spacing-{kikf}-lambda-{L}.npy'
 # Construct the full path including the directory
 databs_file = os.path.join(data_directory, databs_file)
 
-xi3_file=f'xi3-{Wf}-{nkk}-steps-{kikf}-{spacing}-spacing-lambda-{n}L0'
+xi3_file=f'xi3-{Wf}-{nkk}-steps-{kikf}-{spacing}-spacing.npy'
 xi3_file = os.path.join(data_directory, xi3_file)
 
 databs=np.load(databs_file)
@@ -203,7 +201,7 @@ elif Wf=='Wth':
     def W(k,q):        
         a=3.*(np.sin(k/q)-k/q*np.cos(k/q))/(k/q)**3. 
         return a
-#
+    #
     # tophat+transfer
 elif Wf=='Wthtf':
     csrad=np.sqrt(1./3.)
@@ -280,10 +278,7 @@ initial_time_str = time.strftime('%H:%M:%S', time.localtime(ti))
 print('Initial time:', initial_time_str)
 '''
 this for is optimizable
-'''
-# MHsmall = MHsmall[::-1]
-'''
-integrar con respecto a k1/k00, k2/k00, x
+try with pandas/polars and apply
 '''
 for i in tqdm.tqdm(range(len(MHsmall))):
     xi3[i] = Intarray3D_vec(integrandxi3(MHsmall[i], k1, k2, x), k1, k2, x)
@@ -307,34 +302,60 @@ print(f"Computation of xi3 completed in {duration:.2f} seconds")
 
 
 
-# plt.loglog(kzsmall,abs(xi3),'o')
-# plt.plot(kzsmall,abs(xi3))
-# plt.title(f'abs( xi3(k) ), {Wf}')
-# plt.show()
+plt.loglog(kzsmall,abs(xi3),'o')
+plt.plot(kzsmall,abs(xi3))
+plt.title(f'abs( xi3(k) ), {Wf}')
+plt.show()
 
-# plt.figure(00)
-# plt.plot(kzsmall,xi3)
-# plt.plot(kzsmall,xi3,'o')
-# plt.title(f'xi3(k), {Wf}')
-# plt.xscale('log')
-# plt.yscale('symlog')
-# plt.show()
+plt.figure(00)
+plt.plot(kzsmall,xi3)
+plt.plot(kzsmall,xi3,'o')
+plt.title(f'xi3(k), {Wf}')
+plt.xscale('log')
+plt.yscale('symlog')
+plt.show()
 
-# plt.figure(00)
-# plt.plot(MHsmall,xi3)
-# plt.plot(MHsmall,xi3,'o')
-# plt.title(f'xi3(MH), {Wf}')
-# plt.xscale('log')
-# plt.yscale('symlog')
-# plt.show()
+plt.figure(00)
+plt.plot(MHsmall,xi3)
+plt.plot(MHsmall,xi3,'o')
+plt.title(f'xi3(M), {Wf}')
+plt.xscale('log')
+plt.yscale('symlog')
+plt.show()
 
 # np.save(xi3_file, xi3ofk)
 
 
 
+
+
+
+'''listo'''
+
+
+mu = np.zeros([len(MHsmall), size])
+Integrand2=np.zeros([nkk,size])
+Integrand3=np.zeros([nkk,size])
+Integrand4=np.zeros([nkk,size])
+# Integrand2d=np.zeros([nkk,nqq])
+# Integrand2c=np.zeros([nkk,nqq])
+f=np.zeros(size)
+fng=np.zeros(size)
+fng2=np.zeros(size)
+# fc=np.zeros(nqq)
+# fd=np.zeros(nqq)
+f2=np.zeros(size)
+# f3=np.zeros(nqq)
+kzr=[]
+sigmaR2r=[]
+
+
 # to apply the perturbatibity condition I look for the maximum of abs(xi3) and its index.
 # then, i look for the value of the variance at that index.
 # afterwards, i find the maximun value for g that satisfies the perturbativity condition.
+# xi3max=max(abs(xi3[14:]))
+# xi3maxindex=np.argmax(abs(xi3[14:]))
+# kmax=kk[xi3maxindex]
 
 kstar_index=np.argmin(np.abs(kzsmall-k00)) # with this line i'm neglecting k<k0
 xi3max=max(abs(xi3[kstar_index:]))
@@ -342,74 +363,79 @@ xi3maxindex=np.argmax(abs(xi3[kstar_index:]))+kstar_index # accounting for the n
 
 varmax=varsmall[xi3maxindex]
 # S3max=xi3max/varmax**2
-# g = 6.*varmax/(deltac**3.) /S3max
+# g=12.*6.*varmax/(0.45**3.) /S3max
 
 # lets compute a g value for every xi3 value
 gvec = 6.*varsmall**3/(deltac**3.) /abs(xi3)
 
-plt.figure(00)
-plt.plot(MHsmall,gvec*xi3)
-plt.plot(MHsmall,gvec*xi3,'o')
-plt.title(f'g_i*xi3(MH), {Wf}')
-plt.xscale('log')
-plt.yscale('symlog')
-plt.show()
+#este no importa tanto vectorizarlo
+# for j in range(0, size):
+#   mu[:,j]=(Mz[j]/(C*MHsmall))
+#   Integrand2[:,j]=-2/(OmegaCDM)/(np.sqrt(np.pi*2*varsmall[:]))*np.exp(-(mu[:,j]**(1./gamma)+deltac)**2/(2*varsmall[:]))*Mz[j]/MHsmall[:]*(1./gamma)*(Mz[j]/(C*MHsmall[:]))**(1./gamma)*np.sqrt(Meq/MHsmall[:])
+#   f[j]= abs(Intarray_vec(Integrand2[:,j], LMH[:]) ) # ojo: tengo abs() aca!
+#   deltaM=(mu[:,j]**(1./gamma)+deltac)**2
+# #   deltaM=deltac
+#   Integrand3[:,j]=Integrand2[:,j]*(1./6.)*xi3[:]*(deltaM**3/varsmall[:]**3-3*deltaM/varsmall[:]**2)
+#   Integrand4[:,j]=Integrand2[:,j]*(1+(1./6.)*xi3[:]*(deltaM**3/varsmall[:]**3-3*deltaM/varsmall[:]**2) )
+#   # Integrand3[:,j]=Integrand2[:,j]*(1./6.)*xi3norm[:]*(deltaM**3/varsmall[:]**3-3*deltaM/varsmall[:]**2)
+#   f2[j]= abs( Intarray_vec(Integrand3[:,j], LMH[:]) ) # ojo: tengo abs() aca!
+# #   Integrand4[:,j]=Integrand2[:,j]*np.exp((1./6.)*xi3[:]*(deltaM**3/varsmall[:]**3-3*deltaM/varsmall[:]**2))
+# #   fng2[j]=Intarray(Integrand4[:,j],LMH[:])
+# #   fng[j]=f[j]+f2[j]
+#   fng[j]= abs( Intarray_vec(Integrand4[:,j], LMH[:]) ) # ojo: tengo abs() aca!
 
-def intfdeM(M,MHsmall,varsmall,xi3 ):
-    xi3=gvec*xi3
+
+
+def intfdeM(M,MHsmall,varsmall,xi3, g=1):
+    xi3=g*xi3
     mu = (M/(C*MHsmall))
     Integrand_f=-2/(OmegaCDM)/(np.sqrt(np.pi*2*varsmall))*np.exp(-(mu**(1./gamma)+deltac)**2/(2*varsmall))*M/MHsmall*(1./gamma)*(M/(C*MHsmall))**(1./gamma)*np.sqrt(Meq/MHsmall)
     # f= Intarray_vec(Integrand1, LMH) # ojo: tengo abs() aca!
-    # Integrand_f=Integrand_f*-0.5*keq*np.sqrt(Meq/MHsmall) # jacobian k->M_H?
-    # deltaM=(mu**(1./gamma)+deltac)**2
-    deltaM = mu**(1./gamma)+deltac
-#   deltaM=deltac
-    # Integrand_ngcont=(deltaM**3/varsmall**3-3*deltaM/varsmall**2)
-    Integrand_ngcont=Integrand_f*(1./6.)*xi3*(deltaM**3/varsmall**3-3*deltaM/varsmall**2)
-    Integrand_ftot=Integrand_f*(1+(1./6.)*xi3/varsmall**2*(deltaM**3/varsmall -3*deltaM) )
-    # f2=  Intarray_vec(Integrand2, LMH)  # ojo: tengo abs() aca!
-    # fng= Intarray_vec(Integrand4, LMH)  # ojo: tengo abs() aca!
-    return Integrand_f, Integrand_ngcont, Integrand_ftot #, deltaM
 
-'''
-deltaM y la diferencia dentro de la parte ng nunca se hace negativas!
-'''
+    deltaM=mu**(1./gamma)+deltac
+    # deltaM=deltac
+    # Integrand_ngcont=Integrand_f*(1./6.)*xi3*(deltaM**3/varsmall**3-3*deltaM/varsmall**2)
+    Integrand_ftot=Integrand_f*(1+(1./6.)*xi3*(deltaM**3/varsmall**3-3*deltaM/varsmall**2) )
+    # Integrand_ngcont=Integrand_f*np.exp((1./6.)*xi3*(deltaM**3/varsmall**3-3*deltaM/varsmall**2))
+    Integrand_ngcont=1
+    # Integrand_ftot=-2/(OmegaCDM)/(np.sqrt(np.pi*2*varsmall))*np.exp(-(mu**(1./gamma)+deltac)**2/(2*varsmall) +(1./6.)*xi3*(deltaM**3/varsmall**3-3*deltaM/varsmall**2)  )*M/MHsmall*(1./gamma)*(M/(C*MHsmall))**(1./gamma)*np.sqrt(Meq/MHsmall)
+
+    return Integrand_f, Integrand_ngcont, Integrand_ftot
 
 ti= time.time()
 print('f(M) calc')
 initial_time_str = time.strftime('%H:%M:%S', time.localtime(ti))
 print('Initial time:', initial_time_str)
 
-deltaM=[]
 f=np.zeros(size)
 fng=np.zeros(size)
 f2=np.zeros(size)
-# f_ngcont=[]
 '''
 this for may be optimizable.
 eye with the fact that the length of Mz is way bigger than the length of xi3
 '''
+# g= 0.084*g, pt breaks down
+# 0.0834 explodes but computes the normalized one
+# g=0.0832*g to 0.0825, strange things
+# g= 0.0824*g, small jump
+# g=0.0823*g to 0.0813*g, small jump but not in the normalized one
+# g=0.081*g, small  difference
+# 
 for i in tqdm.tqdm(range(0, len(Mz))):
-    a,b,c = intfdeM(Mz[i],MHsmall,varsmall,xi3)
+    a,b,c=intfdeM(Mz[i],MHsmall,varsmall,xi3, g=100*gvec)
     f[i] = Intarray_vec( a, LMH)
-    # f_ngcont.append(b)
-    f2[i] = Intarray_vec( b, LMH)
+    # f2[i] = Intarray_vec( b, LMH)
     fng[i] = Intarray_vec( c, LMH)
-    #deltaM.append(d)
 
-# for i in range(30):
-#     plt.loglog(MHsmall, abs(f_ngcont[100*i]))
-#     plt.show()
-#     # plt.plot(MHsmall,f_ngcont[100*i])
-#     # plt.xscale('log')
-#     # plt.yscale('symlog')
-#     # plt.show()
-# # for i in range(30):
-# #     plt.loglog(MHsmall,deltaM[100*i])
-# #     plt.show()
-# # plt.loglog(MHsmall,deltaM[2999])
-# # plt.show()
- 
+# def fdeMcalc():
+#     f=np.zeros(size)
+#     fng=np.zeros(size)
+#     f2=np.zeros(size)
+#     for i in tqdm.tqdm(range(0, len(Mz))):
+#         a,b,c=intfdeM(Mz[i],MHsmall,varsmall,xi3)
+#         f[i] = Intarray_vec( a, LMH)
+#         f2[i] = Intarray_vec( b, LMH)
+#         fng[i] = Intarray_vec( c, LMH)
 
 
 tf = time.time()
@@ -455,4 +481,5 @@ plt.loglog(Mz,fng/f_pbh_ng, 'o',label='f_ng')
 plt.legend()
 plt.axvline(x=Mp)
 plt.axvline(x=Mpng, color='orange')
+plt.ylim(1e-18,5e1)
 plt.show()
