@@ -50,7 +50,7 @@ cwd = os.getcwd()
 # Load the data from the .npy file
 # kk, pz= np.load('my_data.npy')
 
-Wf='Wth'
+Wf='Wthtf'
 
 gamma=0.36
 if Wf=='Wg':
@@ -287,8 +287,8 @@ podria utilizar Mz en vez de kz y ver que pasa con la varianza
 '''
 for i in tqdm.tqdm(range(0, nkz)):
     # W2[i,:] = np.exp(-(q[:]/keq)**2*(Mz[i]/Meq)) # Gaussian
-    W2[i,:] = 3.*(np.sin(q[:]/kz[i])-q[:]/kz[i]*np.cos(q[:]/kz[i]))/(q[:]/kz[i])**3. # top-hat
-    # W2[i,:] = (3.*(np.sin(q[:]/kz[i])-q[:]/kz[i]*np.cos(q[:]/kz[i]))/(q[:]/kz[i])**3.)*(3.*(np.sin(csrad*q[:]/kz[i])-csrad*q[:]/kz[i]*np.cos(csrad*q[:]/kz[i]))/(csrad*q[:]/kz[i])**3.)
+    # W2[i,:] = 3.*(np.sin(q[:]/kz[i])-q[:]/kz[i]*np.cos(q[:]/kz[i]))/(q[:]/kz[i])**3. # top-hat
+    W2[i,:] = (3.*(np.sin(q[:]/kz[i])-q[:]/kz[i]*np.cos(q[:]/kz[i]))/(q[:]/kz[i])**3.)*(3.*(np.sin(csrad*q[:]/kz[i])-csrad*q[:]/kz[i]*np.cos(csrad*q[:]/kz[i]))/(csrad*q[:]/kz[i])**3.)
     W2[i,:] = (W2[i,:])**2
     integrand[i,:] = (16./81.)*Pfk(Lq[:])*W2[i,:]*(q[:])**3./(keq)**4. *(Mz[i]/Meq)**2
     sigmaR2[i]=Intarray_vec(integrand[i,:]*q[:],Lq[:])
@@ -391,6 +391,19 @@ for i in range (0,nkz):    #this one is to check which k and sigma values are re
 	#	f1[j]=np.trapz(Integrand2[:,j],LMH[:])
 LM=np.log(M)
 
+# ############################################
+# f(M) monochromatic calculation
+# ############################################
+frac=1.
+betamono=2*frac*sigmaR2/deltac/np.sqrt(2*np.pi*sigmaR2)*np.exp(-deltac**2/(2*sigmaR2))
+fmono=1./OmegaCDM*np.sqrt(Meq/MH)*betamono
+
+plt.plot(MH,fmono,'o',label='$f(M)$')
+plt.yscale('log')
+plt.xscale('log')
+plt.title('f mono',fontsize=16)
+plt.show()
+# ############################################
 
 # ############################################
 # ############################################
@@ -474,4 +487,22 @@ plt.show()
 
 # np.savez(cwd+'\\bs\\data\\'+Wf+'-gaussian-data-C4-deltac05.npz', kz=kz, sigmaR2=sigmaR2, f=f, fpeak=fpeak, OmegaPBH=OmegaPBH, Mp=Mp)
 # np.savez(cwd+'\\bs\\data\\gaussian-data-C'+str(C)+'-deltac'+str(deltac)+'-'+Wf+'.npz', kz=kz, sigmaR2=sigmaR2, f=f, fpeak=fpeak, OmegaPBH=OmegaPBH, Mp=Mp)
-np.savez('data\\gaussian-data-C'+str(C)+'-deltac'+str(deltac)+'-'+Wf+'.npz', kz=kz, sigmaR2=sigmaR2, f=f, fpeak=fpeak, OmegaPBH=OmegaPBH, Mp=Mp)
+# np.savez('data\\gaussian-data-C'+str(C)+'-deltac'+str(deltac)+'-'+Wf+'.npz', kz=kz, sigmaR2=sigmaR2, f=f, fpeak=fpeak, OmegaPBH=OmegaPBH, Mp=Mp)
+
+plt.plot(MH,fmono,'o', label='$fmono$')
+plt.plot(M,f,'o', label='$f(M)$')
+plt.yscale('log')
+plt.xscale('log')
+plt.title('f mono vs extended',fontsize=16)
+plt.legend()
+plt.show()
+
+fpbhmono=-Intarray_vec(fmono,LMH)
+
+plt.plot(MH,fmono/fpbhmono,'o', label='$fmono$')
+plt.plot(M,f/OmegaPBH,'o', label='$f(M)$')
+plt.yscale('log')
+plt.xscale('log')
+plt.title('f mono vs extended',fontsize=16)
+plt.legend()
+plt.show()
