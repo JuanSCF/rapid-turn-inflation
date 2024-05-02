@@ -36,7 +36,7 @@ def DeltaZetaAnalytic(K):
 # pz = [DeltaZetaAnalytic(k) for k in kk]
 # pz = np.array(pz)
 
-kk = np.geomspace(1e10, 1e15, 15000)
+kk = np.geomspace(1e8, 1e15, 15000)
 '''aumentar rango de integracion''' #-> disminuye el valor de Mpeak
 pz = [DeltaZetaAnalytic(k/k00) for k in kk]
 '''computing ps for kappa=k/k0'''
@@ -56,6 +56,7 @@ gamma=0.36
 if Wf=='Wg':
   deltac = 0.18
   C=1.44
+  C=4
 else:
   deltac = 0.5
   C=4.
@@ -305,6 +306,7 @@ plt.plot(Mz,sigmaR2,'k', label='$\sigma^2(M)$')
 plt.legend(fontsize=15)
 plt.yscale('log')
 plt.xscale('log')
+plt.xlabel(r'$M/M_\odot$')
 plt.show()
 
 MH = Meq*(keq/kz)**2
@@ -315,27 +317,27 @@ MHp=MH[int(mhpeak)]
 mzpeak=np.argmin(np.abs(sigmaR2-sigmapeak))
 Mzp=MH[int(mzpeak)]
 
-plt.figure(11)
-plt.plot(MH,sigmaR2,'k', label='$\sigma^2(MH)$')
-plt.legend(fontsize=15)
-plt.axvline(x=MHp)
-plt.plot(Mz,sigmaR2,color='orange', label='$\sigma^2(Mz)$')
-plt.axvline(x=Mzp,color='orange')
-plt.yscale('log')
-plt.xscale('log')
-plt.xlabel(r'$M/M_\odot$')
-# plt.ylabel('Y-axis Label')
-plt.show()
+# plt.figure(11)
+# plt.plot(MH,sigmaR2,'k', label='$\sigma^2(MH)$')
+# plt.legend(fontsize=15)
+# plt.axvline(x=MHp)
+# plt.plot(Mz,sigmaR2,color='orange', label='$\sigma^2(Mz)$')
+# plt.axvline(x=Mzp,color='orange')
+# plt.yscale('log')
+# plt.xscale('log')
+# plt.xlabel(r'$M/M_\odot$')
+# # plt.ylabel('Y-axis Label')
+# plt.show()
 
-plt.figure(11)
-plt.plot(Mz,sigmaR2,color='orange', label='$\sigma^2(Mz)$')
-plt.legend(fontsize=15)
-plt.axvline(x=Mzp,color='orange')
-plt.yscale('log')
-plt.xscale('log')
-plt.xlabel(r'$M/M_\odot$')
-# plt.ylabel('Y-axis Label')
-plt.show()
+# plt.figure(11)
+# plt.plot(Mz,sigmaR2,color='orange', label='$\sigma^2(Mz)$')
+# plt.legend(fontsize=15)
+# plt.axvline(x=Mzp,color='orange')
+# plt.yscale('log')
+# plt.xscale('log')
+# plt.xlabel(r'$M/M_\odot$')
+# # plt.ylabel('Y-axis Label')
+# plt.show()
 
 print('MHpeak=', MHp)
 
@@ -499,10 +501,87 @@ plt.show()
 
 fpbhmono=-Intarray_vec(fmono,LMH)
 
-plt.plot(MH,fmono/fpbhmono,'o', label='$fmono$')
-plt.plot(M,f/OmegaPBH,'o', label='$f(M)$')
+# plt.plot(MH,fmono/fpbhmono, label='Monochromatic')
+plt.plot(MH,fmono/np.amax(fmono), '-.', label='Monochromatic')
+plt.plot(M,f/np.amax(f), label='Extended')
 plt.yscale('log')
 plt.xscale('log')
-plt.title('f mono vs extended',fontsize=16)
+plt.title(f'PBH Mass Function Gaussian Statistics {Wf}', fontsize=16)
 plt.legend()
+plt.xlabel(r'$M/M_\odot$')
+plt.ylabel(r'$f(M)$')
+plt.axhline(y=1, color='r', linestyle='--')
+plt.ylim(1e-64, 10)
+# plt.yticks(list(plt.yticks()[0]) + [1])
+# plt.savefig(f'C:\ZZZ\Laburos\Codes\\figss\Gaussian-f\\Gaussian-f(M)-{Wf}.png')
+# plt.savefig(f'C:\ZZZ\Laburos\Codes\\figss\Gaussian-f\\Gaussian-f(M)-{Wf}.svg')
 plt.show()
+
+# wthtf_var = sigmaR2
+# wth_var = sigmaR2
+# wg_var = sigmaR2
+# wgc4_var = sigmaR2
+if Wf=='Wthtf':
+  wthtf_f = f/np.amax(f)
+  wthtf_fmono = fmono/np.amax(fmono)
+  wthtf_Mp = M[np.argmax(f)]
+  wthtf_Mpmono = MH[np.argmax(fmono)]
+elif Wf=='Wgc4':
+  wgc4_f = f/np.amax(f)
+  wgc4_fmono = fmono/np.amax(fmono)
+  wgc4_Mp = M[np.argmax(f)]
+  wgc4_Mpmono = MH[np.argmax(fmono)]
+elif Wf=='Wg':
+  wg_f = f/np.amax(f)
+  wg_fmono = fmono/np.amax(fmono)
+  wg_Mp = M[np.argmax(f)]
+  wg_Mpmono = MH[np.argmax(fmono)]
+elif Wf=='Wth':
+  wth_f = f/np.amax(f)
+  wth_fmono = fmono/np.amax(fmono)
+  wth_Mp = M[np.argmax(f)]
+  wth_Mpmono = MH[np.argmax(fmono)]
+
+
+# # plt.plot(MH, fmono/np.amax(fmono), color='#800020', label = f'Gaussian C=4')
+# # plt.plot(MH, wth_fmono, label = f'Top-hat')
+# # plt.plot(MH, wthtf_fmono, '--', color='#6EB5FF', label = f'Top-hat + transfer function')
+# # plt.plot(MH, wgc4_fmono, 'k', label = r'Gaussian')
+# # plt.plot(MH, wg_fmono, '-.', label = r'Gaussian, $\delta_c=0.18$')
+# # MH2 = np.geomspace(MH[-1], MH[0], 4000)
+# plt.plot(M, wth_f, label = f'Top-hat')
+# plt.plot(M, wthtf_f, '--', color='#6EB5FF', label = f'Top-hat + transfer function')
+# plt.plot(M, wgc4_f, 'k', label = r'Gaussian')
+# plt.plot(M, wg_f, '-.', label = r'Gaussian, $\delta_c=0.18$')
+# plt.yscale('log')
+# plt.xscale('log')
+# plt.title('PBH Mass Function, Gaussian Statistics', fontsize=16)
+# plt.legend()
+# plt.xlabel(r'$M/M_\odot$', fontsize=14)
+# plt.ylabel(r'$f(M)$', fontsize=14)
+# plt.axhline(y=1, color='r', linestyle='--')
+# plt.ylim(1e-64, 10)
+# # plt.yticks(list(plt.yticks()[0]) + [1])
+# # plt.savefig('C:\ZZZ\Laburos\Codes\\figss\Gaussian-f\\mono.png')
+# # plt.savefig('C:\ZZZ\Laburos\Codes\\figss\Gaussian-f\\mono.svg')
+# # plt.savefig('C:\ZZZ\Laburos\Codes\\figss\Gaussian-f\\ex.png')
+# # plt.savefig('C:\ZZZ\Laburos\Codes\\figss\Gaussian-f\\ex.svg')
+# plt.show()
+
+
+# plt.plot(Mz, wth_var, label='Top-hat')
+# plt.plot(Mz, wthtf_var, '--', label=f'Top-hat + transfer function')
+# plt.plot(Mz, wg_var, '-.', color='purple', label='Gaussian')
+# plt.legend(fontsize=17)
+# plt.yscale('log')
+# plt.xscale('log')
+# # plt.title('Variance with different smoothing functions', fontsize=16)
+# plt.legend()
+# plt.xlabel(r'$M_H/M_\odot$', fontsize=15)
+# plt.ylabel(r'$\sigma^2_{M_H}$', rotation=90, fontsize=15)
+# plt.ylim(1e-11, 0.5)
+# # plt.gca().yaxis.set_label_coords(-0.1, 50)  # Set the position of the ylabel
+# # plt.gca().set_ylabel(r'$\sigma^2_{M_H}$', rotation=0, fontsize=15)
+# # plt.savefig('C:\ZZZ\Laburos\Codes\\figss\Gaussian-f\\vars.png')
+# # plt.savefig('C:\ZZZ\Laburos\Codes\\figss\Gaussian-f\\vars.svg')
+# plt.show()

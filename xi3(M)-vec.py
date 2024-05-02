@@ -19,7 +19,7 @@ L=n*L0
 k0 = 1e11 # Mpc^-1 . '''this gives k_peak=1.287e13 Mpc^-1'''
 
 # initial and final k that will be integrated
-ki=6 
+ki=8
 kf=14
 kikf=str(ki)+str(kf)
 ki=1*10**ki 
@@ -27,7 +27,7 @@ kf=1*10**kf
 
 Wf='Wthtf' # Wg, Wgc4, Wth, Wthtf 
 print(f'Wf: {Wf}')
-nkk=300 #number of steps
+nkk=400 #number of steps
 spacing='geometric' # 'geometric' or 'linear'
 size=3000
 
@@ -90,7 +90,7 @@ xi3_file=f'xi3-gth-{Wf}-{nkk}-steps-{kikf}-{spacing}-spacing-lambda-{n}L0'
 xi3_file = os.path.join(data_directory, xi3_file)
 
 # databs=np.load(databs_file)
-databs = np.load(f'C:\ZZZ\Laburos\Codes\databs-gth-{nkk}-steps-geometric-spacing-{kikf}-lambda-1L0.npy')
+databs = np.load(f'C:\ZZZ\Laburos\Codes\\newdata\databs-gth-{nkk}-steps-geometric-spacing-{kikf}-lambda-1L0.npy')
 
 
 ############################################################################
@@ -235,8 +235,8 @@ def Mcal(k,q):
 #     a = np.where(condition, int_xi3(m1,m2,wx), a)
 #     return a
 
-def int_xi3(m1,m2,wx):
-    a = 0.5/12.*m1[:, None, None]*m2[None, :, None]*wx*databs
+def int_xi3(m1,m2,m12x):
+    a = 2./(2.*np.pi)**4*k1[:, None, None]**2.*k2[None, :, None]**2.*m1[:, None, None]*m2[None, :, None]*m12x*databs
     return a
 
 def integrandxi3(Mh,k1,k2,x):
@@ -244,11 +244,12 @@ def integrandxi3(Mh,k1,k2,x):
     m1=Mcal(k1,q)
     m2=Mcal(k2,q)
     k12x = np.sqrt(k1[:, None, None]**2 + k2[None, :, None]**2 - 2*k1[:, None, None]*k2[None, :, None]*x[None, None, :])
-    wx=4./9.*q**(-2.)*W(k12x,q)
+    # wx=4./9.*q**(-2.)*W(k12x,q)
+    m12x=Mcal( k12x ,q)
 
     condition = (k12x < L*k0) & (k1[:, None, None] < L*k0) & (k2[None, :, None] < L*k0)
     a=np.zeros_like(databs)
-    a = np.where(condition, int_xi3(m1,m2,wx), a)
+    a = np.where(condition, int_xi3(m1, m2, m12x), a)
     return a
 
 
@@ -265,6 +266,7 @@ this for is optimizable
 # MHsmall = MHsmall[::-1]
 '''
 integrar con respecto a k1/k0, k2/k0, x ????
+tendria que agregar un jacobiano eso si
 '''
 for i in tqdm.tqdm(range(len(MHsmall))):
     xi3[i] = Intarray3D_vec(integrandxi3(MHsmall[i], k1, k2, x), k1, k2, x)
@@ -284,7 +286,7 @@ print('Final time:', final_time_str)
 print(f"Computation of xi3 completed in {duration:.2f} seconds")
 
 # np.save(xi3_file, xi3)
-# np.save(f'C:\\ZZZ\\Laburos\\Codes\\xi3-gth-{Wf}-{nkk}-steps-{kikf}-geometric-spacing-lambda-1L0.npy', xi3)
+np.save(f'C:\\ZZZ\\Laburos\\Codes\\newdata\\xi3-gth-{Wf}-{nkk}-steps-{kikf}-geometric-spacing-lambda-1L0.npy', xi3)
 
 
 ################################################
@@ -361,9 +363,10 @@ plt.plot(MHsmall,xi3)
 plt.title(f'xi3(MH), {Wf}')
 plt.xscale('log')
 plt.yscale('symlog')
+plt.axhline(y=0, color='r', linestyle='--')
 plt.show()
 
-# np.save(xi3_file, xi3ofk)
+
 
 
 
@@ -389,6 +392,7 @@ plt.plot(MHsmall, g0*xi3,'o')
 plt.title(f'g_i*xi3(MH), {Wf}')
 plt.xscale('log')
 plt.yscale('symlog')
+plt.axhline(y=0, color='r', linestyle='--')
 plt.show()
 
 # sys.exit()
@@ -438,6 +442,7 @@ for i in range(10):
     # plt.loglog(MHsmall, abs(f_ngcont[10*i]))
     # plt.show()
     plt.plot(MHsmall,f_ngcont[300*i], 'o', label=f'M={Mz[300*i]}')
+    plt.plot(MHsmall,f_ngcont[300*i], label=f'M={Mz[300*i]}')
     plt.xscale('log')
     plt.yscale('symlog')
     plt.title(f'f_ngcont(MH) para Mpbh fijo, {Wf}')
@@ -596,6 +601,16 @@ plt.plot(MHsmall,fmonoNG1,'o',label='f_monoNG1')
 plt.plot(MHsmall,fmonoNG2,'o',label='f_monoNG2')
 plt.plot(MHsmall,fmonoR1,'o',label='f_monoR1')
 plt.plot(MHsmall,fmonoR2,'o',label='f_monoR2')
+plt.legend()
+plt.xscale('log')
+plt.yscale('log')
+plt.show()
+
+frac=1.
+betamonofull=2*frac*sigmaR2/deltac/np.sqrt(2*np.pi*sigmaR2)*np.exp(-deltac**2/(2*sigmaR2))
+fmonofull=1./OmegaCDM*np.sqrt(Meq/MH)*betamonofull
+
+plt.plot(MH,fmonofull,'o',label='f_mono')
 plt.legend()
 plt.xscale('log')
 plt.yscale('log')

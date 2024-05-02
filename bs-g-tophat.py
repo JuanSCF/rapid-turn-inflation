@@ -28,13 +28,13 @@ L=n*251.327
 k0 = 1e11 # Mpc^-1 . '''this gives k_peak=1.287e13 Mpc^-1'''
 
 # initial and final k that will be integrated
-ki=6
+ki=8
 kf=14
 kikf=str(ki)+str(kf)
 ki=1*10**ki 
 kf=1*10**kf
 
-nkk=300 #number of steps
+nkk=400 #number of steps
 spacing='geometric' # 'geometric' or 'linear'
 
 
@@ -136,6 +136,7 @@ def bs(k1,k2,x):
 
     r = a+b+c1+d1+c2+d2+c3+d3+c4+d4+c5+d5+c6+d6
     return 3.*r.imag
+    # return 3.*(k1*k2)**2.*(k1**2.+k2**2.-2.*k1*k2*x)*r
 
 
 
@@ -211,7 +212,7 @@ print(f"Computation completed in {duration:.2f} seconds")
 
 # Save the data to a .npy file
 # np.save(full_path, databs)
-np.save(f'C:\ZZZ\Laburos\Codes\databs-gth-{nkk}-steps-geometric-spacing-{kikf}-lambda-1L0.npy', databs)
+np.save(f'C:\ZZZ\Laburos\Codes\\newdata\databs-gth-{nkk}-steps-geometric-spacing-{kikf}-lambda-1L0.npy', databs)
 
 
 # df = pd.DataFrame({

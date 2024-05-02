@@ -20,14 +20,14 @@ L=n*L0
 k00 = 1e11 # Mpc^-1 . '''this gives k_peak=1.287e13 Mpc^-1'''
 
 # initial and final k that will be integrated
-ki=6
+ki=8
 kf=14
 kikf=str(ki)+str(kf)
 ki=1*10**ki 
 kf=1*10**kf
 
 Wf='Wthtf' # options: 'Wg', 'Wgc4', 'Wth', 'Wthtf'
-nkk=300 #number of steps
+nkk=400 #number of steps
 spacing='geometric' # 'geometric' or 'linear'
 size=3000
 
@@ -84,8 +84,9 @@ databs_file = os.path.join(data_directory, databs_file)
 
 xi3_file=f'xi3-{Wf}-{nkk}-steps-{kikf}-{spacing}-spacing-lambda-{n}L0.npy'
 xi3_file = os.path.join(data_directory, xi3_file)
-xi3_gth_file=f'xi3-gth-{Wf}-{nkk}-steps-{kikf}-{spacing}-spacing-lambda-{n}L0.npy'
+xi3_gth_file = f'xi3-gth-{Wf}-{nkk}-steps-{kikf}-{spacing}-spacing-lambda-{n}L0.npy'
 xi3_gth_file = os.path.join(data_directory, xi3_gth_file)
+xi3_gth_file = f'C:\ZZZ\Laburos\Codes\\newdata\\xi3-gth-{Wf}-{nkk}-steps-{kikf}-{spacing}-spacing-lambda-{n}L0.npy'
 
 # databs=np.load(databs_file)
 # databs_gth=np.load(databs_gth_file)
@@ -191,119 +192,44 @@ def Intarray_vec(f, array):
 LMH=np.log(MHsmall)
 
 
-'''
-perturbativity condition
-np.amax(6.*varsmall**3/deltac**3/abs(xi3)) =2.68e+85
-#
-# lets compute a g value for every xi3 value
-# gvec = 6.*varsmall**3/(deltac**3.) /abs(xi3)
-g0 = -4e86 # (+-) approx max value that g0 may take ??
-see +-4e83
-g0 = -1e81 # (+-) between this value and the above, the pdf shows departures
-g0 = 1e-44 # +-1e-36 interesting values, see pdf form
-# between 1-2e-44 there appears neg values in f_ng(M)
-g \in (-0.054, 0.013) ??
-g0=-1e-36
-'''
-gmax = np.amax(6.*varsmall**3/deltac**3/abs(xi3))
+gvec = 6.*varsmall**3/(deltac**3.) /abs(xi3)
+gmax = np.amax(6.*(varsmall/deltac)**3/abs(xi3))
 # gval = -0.000004
 # g0 = gmax*gval
-g0 = 1e-20
-gval = 1
+g0 = 1.832
+gval = g0
 pathfigs=cwd+f'\\figs\\gpivot\\g{gval}\\'
 
-# plt.plot(MHsmall, xi3,'o')
-# plt.plot(MHsmall, xi3)
-# plt.title(f'xi3(MH), {Wf}')
-# # plt.xscale('log')
-# # plt.yscale('symlog')
-# plt.ylabel(r'$\xi_3(M_H)$')
-# plt.xlabel(r'$M_H/M_\odot$')
-# # plt.savefig(pathfigs+f'xi3MH-{Wf}.png')
-# # plt.savefig(pathfigs+f'xi3MH-{Wf}.svg')
-# plt.show()
 
-#3 plots
-# plt.figure(00)
-# plt.plot(MHsmall,g0*xi3,'o')
-# plt.plot(MHsmall,g0*xi3 )
-# plt.title(r'$g_0/g_{max}=$'+f'{gval}, {Wf}')
-# plt.ylabel(r'$\xi_3(M_H)$')
-# plt.xlabel(r'$M_H/M_\odot$')
-# # plt.axvline(x=2e-13)
-# # plt.axvline(x=60e-13)
-# plt.axhline(y=0, color='r', linestyle='--')
+
+
+plt.figure(00)
+plt.plot(MHsmall,g0*xi3,'o')
+plt.plot(MHsmall,g0*xi3 )
+plt.title(r'$g_0=$'+f'{g0}, {Wf}')
+plt.ylabel(r'$\xi_3(M_H)$')
+plt.xlabel(r'$M_H/M_\odot$')
+# plt.axvline(x=2e-13)
+# plt.axvline(x=60e-13)
+plt.axhline(y=0, color='r', linestyle='--')
 # plt.axhline(y=1, color='k', linestyle='--')
 # plt.axhline(y=-1, color='k', linestyle='--')
-# # plt.savefig(pathfigs+f'xi3MH-{Wf}-g{gval}.png')
-# # plt.savefig(pathfigs+f'xi3MH-{Wf}-g{gval}.svg')
-# plt.show()
-
-# plt.figure(00)
-# plt.plot(MHsmall,g0*xi3,'o')
-# plt.plot(MHsmall,g0*xi3 )
-# plt.title(r'$g_0/g_{max}=$'+f'{gval}, {Wf}')
-# plt.ylabel(r'$\xi_3(M_H)$')
-# plt.xlabel(r'$M_H/M_\odot$')
-# # plt.axvline(x=2e-13)
-# # plt.axvline(x=60e-13)
-# plt.axhline(y=0, color='r', linestyle='--')
-# plt.axhline(y=1, color='k', linestyle='--')
-# plt.axhline(y=-1, color='k', linestyle='--')
-# plt.xscale('log')
-# # plt.savefig(pathfigs+f'xi3MH-{Wf}-g{gval}-loglog.png')
-# # plt.savefig(pathfigs+f'xi3MH-{Wf}-g{gval}-loglog.svg')
-# plt.show()
+plt.xscale('log')
+plt.yscale('symlog')
+plt.yticks(list(plt.yticks()[0]) + [0])
+# plt.savefig(pathfigs+f'xi3MH-{Wf}-g{gval}-symlog.png')
+# plt.savefig(pathfigs+f'xi3MH-{Wf}-g{gval}-symlog.svg')
+plt.show()
 
 
-# plt.figure(00)
-# plt.plot(MHsmall,g0*xi3,'o')
-# plt.plot(MHsmall,g0*xi3 )
-# plt.title(r'$g_0/g_{max}=$'+f'{gval}, {Wf}')
-# plt.ylabel(r'$\xi_3(M_H)$')
-# plt.xlabel(r'$M_H/M_\odot$')
-# # plt.axvline(x=2e-13)
-# # plt.axvline(x=60e-13)
-# plt.axhline(y=0, color='r', linestyle='--')
-# plt.axhline(y=1, color='k', linestyle='--')
-# plt.axhline(y=-1, color='k', linestyle='--')
-# plt.xscale('log')
-# plt.yscale('symlog')
-# plt.yticks(list(plt.yticks()[0]) + [0])
-# # plt.savefig(pathfigs+f'xi3MH-{Wf}-g{gval}-symlog.png')
-# # plt.savefig(pathfigs+f'xi3MH-{Wf}-g{gval}-symlog.svg')
-# plt.show()
-
-
-# MHsmall = MHsmall[::-1]
-# varsmall = varsmall[::-1]
-# xi3 = xi3[::-1]
-def intfdeM(M,MHsmall,varsmall,xi3 ):
-    xi3 = g0*xi3 #1e-78
-    # xi3 = xi3[::-1]
-    # MHsmall = MHsmall[::-1]
-    # varsmall = varsmall[::-1]
-    mu = (M/(C*MHsmall))
-    Integrand_f=-2/(OmegaCDM)/(np.sqrt(np.pi*2*varsmall))*np.exp(-(mu**(1./gamma)+deltac)**2/(2*varsmall))*M/MHsmall*(1./gamma)*(M/(C*MHsmall))**(1./gamma)*np.sqrt(Meq/MHsmall)
-    # f= Intarray_vec(Integrand1, LMH) # ojo: tengo abs() aca!
-    # Integrand_f=Integrand_f*-0.5*keq*np.sqrt(Meq/MHsmall) # jacobian k->M_H?
-    # deltaM=(mu**(1./gamma)+deltac)**2
-    deltaM = mu**(1./gamma)+deltac
-#   deltaM=deltac
-    Integrand_ngcont=( (1./6.)*xi3*((deltaM/varsmall)**3.-3.*deltaM/varsmall**2.) )
-    # Integrand_ngcont=Integrand_f*(1./6.)*xi3*(deltaM**3/varsmall**3-3*deltaM/varsmall**2)
-    Integrand_ftot=Integrand_f*(1.+1./6.*xi3*((deltaM/varsmall)**3.-3.*deltaM/varsmall**2.) )
-    Integrand_fresum=Integrand_f*np.exp(-(1./6.)*xi3*(3*deltaM/varsmall**2-(deltaM/varsmall)**3.))
-    return Integrand_f, Integrand_ftot, Integrand_ngcont, Integrand_fresum, deltaM
-'''
-deltaM y la diferencia dentro de la parte ng nunca se hace negativas!
-'''
+# plots for the pdf
 MHvals = []
 MHindexes = []
 for i in [1e-15, 1e-14, 1e-13, 1e-12, 1e-11, 1e-10, 1e-9, 1e-8, 1e-7, 1e-6, 1e-5, 1e-4]:
-    index=np.argmin(np.abs(MHsmall-i)) ##  !!!
+    index=np.argmin(np.abs(MHsmall-i)) 
     MHindexes.append(index)
     MHvals.append(MHsmall[index])
+
 
 
 
@@ -312,31 +238,49 @@ def gaussian_pdf(alpha, i):
 def ng_pdf(alpha, i):
     return gaussian_pdf(alpha, i)*(1+(1./6.)*g0*xi3[i]*((alpha/varsmall[i])**3.-3.*alpha/varsmall[i]**2.) )
 def ng_pdf_resum(alpha, i):
-    return gaussian_pdf(alpha, i)*np.exp((1./6.)*g0*xi3[i]*((alpha/varsmall[i])**3.-3.*alpha/varsmall[i]**2.) )
+    return gaussian_pdf(alpha, i)*np.exp((1./6.)*g0*xi3[i]*((alpha/varsmall[i])**3. - 3.*alpha/varsmall[i]**2.) )
+# def ng_pdf_resum2(alpha, i):
+#     return 1./(np.sqrt(2*np.pi*varsmall[i]))*np.exp(-(alpha+g0*xi3[i]/(2*varsmall[i]))**2/(2*varsmall[i]) + g0*xi3[i]/(6.*varsmall[i]**3)*(alpha**3.+0.75*g0*xi3[i]) )
 
 
-
-
-
+# a = np.linspace(-1, 1, 3000)
 # for i in MHindexes:
-#     x = np.linspace(-5, 5, 3000)
-#     gaussian_probf = gaussian_pdf(x, i)
-#     ng_fprob = ng_pdf(x, i)
-#     ng_fprob_resum = ng_pdf_resum(x, i)
-#     plt.plot(x, gaussian_probf, label='gaussian')
-#     plt.plot(x, ng_fprob, label='ng')
-#     plt.plot(x, ng_fprob_resum, label='ng resummed')
-#     # plt.xscale('log')
-#     # plt.yscale('symlog')
+#     # print(varsmall[i])
+#     # print(xi3[i])
+#     gpdf_mono = gaussian_pdf(a, i)
+#     # ng_fprob = ng_pdf(x, i)
+#     ngpdf_ex = ng_pdf_resum(a, i)
+#     # ngpdf_ex2 = ng_pdf_resum2(a, i)
+#     plt.plot(a, gpdf_mono, label='gaussian')
+#     # plt.plot(x, ng_fprob, label='ng')
+#     plt.plot(a, ngpdf_ex, '.',label='ng resummed')
+#     # plt.plot(a, ngpdf_ex2, label='ng resummed2')
 #     plt.legend()
 #     plt.ylabel(r'$P[\alpha]$')
 #     plt.xlabel(r'$\alpha$')
 #     plt.title(f'Monochrome PDF g={g0}, MH={MHsmall[i]}, {Wf}')
 #     plt.axhline(y=0, color='r', linestyle='--')
-#     plt.yticks(list(plt.yticks()[0]) + [0])
+#     # plt.yticks(list(plt.yticks()[0]) + [0])
 #     # plt.savefig(pathfigs+f'mono-pdf-{Wf}-g{gval}-symlog.png')
 #     # plt.savefig(pathfigs+f'mono-pdf-{Wf}-g{gval}-symlog.svg')
 #     plt.show()
+
+def ngterm(alpha):
+    return (1./6.)*g0*xi3*((alpha/varsmall)**3. - 3.*alpha/varsmall**2.)
+
+def deltamfunc(M, i):
+    return (M/(C*MHsmall[i]))**(1./gamma)+deltac
+
+# for i in MHindexes:
+#     plt.plot(Mz, deltamfunc(Mz, i))
+#     # plt.legend()
+#     # plt.ylabel(r'$P[\alpha]$')
+#     # plt.xlabel(r'$\alpha$')
+#     # plt.title(f'Monochrome PDF g={g0}, MH={MHsmall[i]}, {Wf}')
+#     plt.axhline(y=0, color='r', linestyle='--')
+#     # plt.yticks(list(plt.yticks()[0]) + [0])
+#     plt.show()
+
 
 def gaussian_pdf_ex(Mpbh, i):
     alpha = (Mpbh/(C*MHsmall[i]))**(1./gamma)+deltac
@@ -346,37 +290,57 @@ def ng_pdf_ex(Mpbh, i):
     return gaussian_pdf_ex(Mpbh, i)*(1+(1./6.)*g0*xi3[i]*((alpha/varsmall[i])**3.-3.*alpha/varsmall[i]**2.) )
 def ng_pdf_resum_ex(Mpbh, i):
     alpha = (Mpbh/(C*MHsmall[i]))**(1./gamma)+deltac
-    return gaussian_pdf_ex(Mpbh, i)*np.exp((1./6.)*g0*xi3[i]*((alpha/varsmall[i])**3.-3.*alpha/varsmall[i]**2.) )
-
+    return 1./(np.sqrt(2*np.pi*varsmall[i]))*np.exp(-alpha**2/(2*varsmall[i])+(1./6.)*g0*xi3[i]*((alpha/varsmall[i])**3.-3.*alpha/varsmall[i]**2.) )
 def ng_pdf_resum_ex2(Mpbh, i):
     alpha = (Mpbh/(C*MHsmall[i]))**(1./gamma)+deltac
     return 1./(np.sqrt(2*np.pi*varsmall[i]))*np.exp(-alpha**2/(2*varsmall[i])*(1-1./6.*g0*xi3[i]/varsmall[i]**2.*2*alpha) )
 
-for i in MHindexes:
-    x = np.geomspace(1e-18, 1e-10, 3000)
-    gaussian_probf_ex = gaussian_pdf_ex(x, i)
-    ng_fprob_ex = ng_pdf_ex(x, i)
-    ng_fprob_resum_ex = ng_pdf_resum_ex(x, i)
-    ng_fprob_ex2 = ng_pdf_resum_ex2(x, i)
-    plt.plot(x, gaussian_probf_ex, label='gaussian')
-    plt.plot(x, ng_fprob_ex, label='ng')
-    # plt.plot(x, ng_fprob_resum_ex, label='ng resummed')
-    plt.plot(x, ng_fprob_ex2, label='ng resummed2')
-    plt.xscale('log')
-    plt.yscale('symlog')
-    plt.legend()
-    plt.ylabel(r'$P[\delta(M)]$')
-    plt.xlabel(r'$M_{pbh}/M_\odot$')
-    plt.title(f'Extended PDF g={g0}, MH={MHsmall[i]}, {Wf}')
-    plt.axhline(y=0, color='r', linestyle='--')
-    plt.yticks(list(plt.yticks()[0]) + [0])
-    # plt.savefig(pathfigs+f'mono-pdf-{Wf}-g{gval}-symlog.png')
-    # plt.savefig(pathfigs+f'mono-pdf-{Wf}-g{gval}-symlog.svg')
-    plt.show()
+# plot for extended f(M)
+# starting from g0 = 1e4 there starts to appear differences between pdfs
+# g0 can be no higher than 5e6
+# g0 = 1e4
+# Mx = np.geomspace(1e-18, 1e-5, 3000)
+# for i in MHindexes:
+#     plt.plot(Mx, gaussian_pdf_ex(Mx, i), label='gaussian')
+#     plt.plot(Mx, ng_pdf_resum_ex(Mx, i), label='ng resummed')
+#     plt.xscale('log')
+#     plt.yscale('symlog')
+#     plt.legend()
+#     plt.ylabel(r'$P[\delta(M)]$')
+#     plt.xlabel(r'$M_{pbh}/M_\odot$')
+#     plt.title(f'Extended PDF g={g0}, MH={MHsmall[i]}, {Wf}')
+#     plt.axhline(y=0, color='r', linestyle='--')
+#     plt.yticks(list(plt.yticks()[0]) + [0])
+#     # plt.savefig(pathfigs+f'mono-pdf-{Wf}-g{gval}-symlog.png')
+#     # plt.savefig(pathfigs+f'mono-pdf-{Wf}-g{gval}-symlog.svg')
+#     plt.show()
 
 
 
-sys.exit()
+# MHsmall = MHsmall[::-1]
+# varsmall = varsmall[::-1]
+# xi3 = xi3[::-1]
+def intfdeM(M,MHsmall,varsmall,xi3 ):
+    xi3 = g0*xi3
+    # xi3 = xi3[::-1]
+    # MHsmall = MHsmall[::-1]
+    # varsmall = varsmall[::-1]
+    mu = (M/(C*MHsmall))
+    Integrand_f=-2/(OmegaCDM)/(np.sqrt(np.pi*2*varsmall))*np.exp(-(mu**(1./gamma)+deltac)**2/(2*varsmall))*M/MHsmall*(1./gamma)*(M/(C*MHsmall))**(1./gamma)*np.sqrt(Meq/MHsmall)
+    deltaM = mu**(1./gamma)+deltac
+    Integrand_ngcont=( (1./6.)*xi3*((deltaM/varsmall)**3.-3.*deltaM/varsmall**2.) )
+    # Integrand_ngcont=Integrand_f*(1./6.)*xi3*(deltaM**3/varsmall**3-3*deltaM/varsmall**2)
+    Integrand_ftot=Integrand_f*(1.+1./6.*xi3*((deltaM/varsmall)**3.-3.*deltaM/varsmall**2.) )
+    Integrand_fresum=Integrand_f*np.exp((1./6.)*xi3*((deltaM/varsmall)**3. - 3*deltaM/varsmall**2))
+    return Integrand_f, Integrand_ftot, Integrand_ngcont, Integrand_fresum
+'''
+deltaM y la diferencia dentro de la parte ng nunca se hace negativas!
+'''
+
+
+
+
+
 # this part is for plotting the integrand of the ng contribution
 f=np.zeros(size)
 fng=np.zeros(size)
@@ -390,15 +354,14 @@ eye with the fact that the length of Mz is way bigger than the length of xi3
 '''
 
 for i in tqdm.tqdm(range(0, len(Mz))):
-    a,b,c,d, e = intfdeM(Mz[i],MHsmall,varsmall,xi3)
+    a,b,c,d = intfdeM(Mz[i],MHsmall,varsmall,xi3)
     f[i] = Intarray_vec( a, LMH)
-    fng[i] = Intarray_vec( b, LMH)
+    # fng[i] = Intarray_vec( b, LMH)
     ngcont.append(c)
-    fresum[i] = Intarray_vec( d, LMH)
-    deltaMz.append(e)
+    fng[i] = Intarray_vec( d, LMH)
     # f2.append(a)
 ngcont = np.array(ngcont)
-deltaMz = np.array(deltaMz)
+
 def find_crossing_index(ngcont_3000, ngcont_300):
     for i in range(len(ngcont_3000)):
         if np.sign(ngcont_3000[i]) != np.sign(ngcont_300[i]):
@@ -408,84 +371,84 @@ def find_crossing_index(ngcont_3000, ngcont_300):
 # plor for the pdf of delta(Mpbh)
 #
 
-for i in range(5):
-    deltam = deltaMz[200*i]
-    g_pdf_ex = 1./(np.sqrt(2*np.pi*varsmall))*np.exp(-deltam**2/(2*varsmall))
-    ng_pdf_ex = g_pdf_ex*(1+(1./6.)*g0*xi3*((deltam/varsmall)**3.-3*deltam/varsmall**2) )
-    # ng_pdf_ex2=g_pdf_ex*np.exp((1./6.)*g0*xi3*((deltam/varsmall)**3.-3*deltam/varsmall**2) )
-    plt.plot(MHsmall, g_pdf_ex, label='gaussian')
-    plt.plot(MHsmall, ng_pdf_ex, label='ng')
-    # plt.plot(MHsmall, ng_pdf_ex2, label='ng_resum')
-    plt.xscale('log')
-    plt.yscale('symlog')
-    plt.legend()
-    plt.ylabel(r'$P[R]$')
-    plt.xlabel(r'$M_H/M_\odot$')
-    plt.title(f'Extended PDF Mpbh={Mz[100*i]} g={gval}, {Wf}')
-    plt.axhline(y=0, color='r', linestyle='--')
-    plt.show()
+# for i in range(5):
+#     deltam = deltaMz[200*i]
+#     g_pdf_ex = 1./(np.sqrt(2*np.pi*varsmall))*np.exp(-deltam**2/(2*varsmall))
+#     ng_pdf_ex = g_pdf_ex*(1+(1./6.)*g0*xi3*((deltam/varsmall)**3.-3*deltam/varsmall**2) )
+#     # ng_pdf_ex2=g_pdf_ex*np.exp((1./6.)*g0*xi3*((deltam/varsmall)**3.-3*deltam/varsmall**2) )
+#     plt.plot(MHsmall, g_pdf_ex, label='gaussian')
+#     plt.plot(MHsmall, ng_pdf_ex, label='ng')
+#     # plt.plot(MHsmall, ng_pdf_ex2, label='ng_resum')
+#     plt.xscale('log')
+#     plt.yscale('symlog')
+#     plt.legend()
+#     plt.ylabel(r'$P[R]$')
+#     plt.xlabel(r'$M_H/M_\odot$')
+#     plt.title(f'Extended PDF Mpbh={Mz[100*i]} g={gval}, {Wf}')
+#     plt.axhline(y=0, color='r', linestyle='--')
+#     plt.show()
+# # plt.axhline(y=0, color='r', linestyle='--')
+# # plt.show()
+# # m0=MHofk(k00)
+# for i in range(10):
+#     plt.axvline(x=Mz[570], color='red')
+#     plt.plot(MHsmall, ngcont[100*i],'o', label=f'Mpbh={ Mz[100*i] }')
+#     plt.plot(MHsmall, ngcont[100*i])
+#     # plt.show()
+#     plt.axhline(y=0, color='r', linestyle='--')
+#     plt.axhline(y=1, color='k', linestyle='--')
+#     plt.axhline(y=-1, color='k', linestyle='--')
+#     plt.legend()
+#     plt.title(f'f_ngcont(MH) para Mpbh fijo, {Wf}')
+#     plt.xlabel(r'$M_{H}$')
+#     plt.xscale('log')
+#     plt.yscale('symlog')
+#     plt.show()    
+
+# for i in range(10): #10
+#     plt.plot(MHsmall, ngcont[300*i], label=f'Mpbh={ Mz[300*i] }')
+#     plt.xscale('log')
+#     plt.yscale('symlog')
+#     # plt.axhline(y=0, color='r', linestyle='--')
+#     # plt.show()
+# plt.title(f'ng contribution g={gval}, {Wf}')    
+# # plt.axvline(x=Mp)
+# plt.xlabel(r'$M_{H}$')
+# # plt.axvline(x=1e-10)
+# # plt.axvline(x=2e-13)
+# # plt.axvline(x=60e-13)
+# plt.axvline(x=Mz[570], color='red')
 # plt.axhline(y=0, color='r', linestyle='--')
-# plt.show()
-# m0=MHofk(k00)
-for i in range(10):
-    plt.axvline(x=Mz[585], color='red')
-    plt.plot(MHsmall, ngcont[100*i],'o', label=f'Mpbh={ Mz[100*i] }')
-    plt.plot(MHsmall, ngcont[100*i])
-    # plt.show()
-    plt.axhline(y=0, color='r', linestyle='--')
-    plt.axhline(y=1, color='k', linestyle='--')
-    plt.axhline(y=-1, color='k', linestyle='--')
-    plt.legend()
-    plt.title(f'f_ngcont(MH) para Mpbh fijo, {Wf}')
-    plt.xlabel(r'$M_{H}$')
-    plt.xscale('log')
-    plt.yscale('symlog')
-    plt.show()    
-
-for i in range(10): #10
-    plt.plot(MHsmall, ngcont[300*i], label=f'Mpbh={ Mz[300*i] }')
-    plt.xscale('log')
-    plt.yscale('symlog')
-    # plt.axhline(y=0, color='r', linestyle='--')
-    # plt.show()
-plt.title(f'ng contribution g={gval}, {Wf}')    
-# plt.axvline(x=Mp)
-plt.xlabel(r'$M_{H}$')
-# plt.axvline(x=1e-10)
-# plt.axvline(x=2e-13)
-# plt.axvline(x=60e-13)
-plt.axvline(x=Mz[585], color='red')
-plt.axhline(y=0, color='r', linestyle='--')
-plt.axhline(y=1, color='k', linestyle='--')
-plt.axhline(y=-1, color='k', linestyle='--')
-plt.legend()
-# plt.savefig(pathfigs+f'ngcont-{Wf}-g{gval}-symlog.png')
-# plt.savefig(pathfigs+f'ngcont-{Wf}-g{gval}-symlog.svg')
-plt.show()    
+# plt.axhline(y=1, color='k', linestyle='--')
+# plt.axhline(y=-1, color='k', linestyle='--')
+# plt.legend()
+# # plt.savefig(pathfigs+f'ngcont-{Wf}-g{gval}-symlog.png')
+# # plt.savefig(pathfigs+f'ngcont-{Wf}-g{gval}-symlog.svg')
+# plt.show()    
 
 
-for i in range(14): #10
-    ni = 50*i
-    plt.plot(MHsmall, ngcont[ni], label=f'Mpbh={ Mz[ni] }')
-    plt.xscale('log')
-    plt.yscale('symlog')
-    # plt.axhline(y=0, color='r', linestyle='--')
-    # plt.show()
-plt.title(f'ng contribution g={gval}, {Wf}')    
-# plt.axvline(x=Mp)
-plt.xlabel(r'$M_{H}$')
-# plt.axvline(x=1e-10)
-# plt.axvline(x=2e-13)
-# plt.axvline(x=60e-13)
-plt.axvline(x=Mz[585], color='red')
-plt.axhline(y=0, color='r', linestyle='--')
-plt.axhline(y=1, color='k', linestyle='--')
-plt.axhline(y=-1, color='k', linestyle='--')
-plt.xlim(Mz[0], 1e-11)
-plt.legend()
-# plt.savefig(pathfigs+f'ngcont-{Wf}-g{gval}-symlog.png')
-# plt.savefig(pathfigs+f'ngcont-{Wf}-g{gval}-symlog.svg')
-plt.show()  
+# for i in range(14): #10
+#     ni = 50*i
+#     plt.plot(MHsmall, ngcont[ni], label=f'Mpbh={ Mz[ni] }')
+#     plt.xscale('log')
+#     plt.yscale('symlog')
+#     # plt.axhline(y=0, color='r', linestyle='--')
+#     # plt.show()
+# plt.title(f'ng contribution g={gval}, {Wf}')    
+# # plt.axvline(x=Mp)
+# plt.xlabel(r'$M_{H}$')
+# # plt.axvline(x=1e-10)
+# # plt.axvline(x=2e-13)
+# # plt.axvline(x=60e-13)
+# plt.axvline(x=Mz[570], color='red') #583
+# plt.axhline(y=0, color='r', linestyle='--')
+# plt.axhline(y=1, color='k', linestyle='--')
+# plt.axhline(y=-1, color='k', linestyle='--')
+# plt.xlim(Mz[0], 1e-11)
+# plt.legend()
+# # plt.savefig(pathfigs+f'ngcont-{Wf}-g{gval}-symlog.png')
+# # plt.savefig(pathfigs+f'ngcont-{Wf}-g{gval}-symlog.svg')
+# plt.show()  
 
 # function for studying whether all values of an array are less than zero
 
@@ -585,28 +548,8 @@ plt.show()
 any_neg_value(fng)
 
 
-plt.plot(Mz,f/f_pbh,'o',label='f')
-plt.plot(Mz,fng/fng_pbh,'o',label='f_ng')
-plt.xscale('log')
-plt.yscale('symlog')
-plt.legend(loc='right', bbox_to_anchor=(1, 0.85))
-plt.axhline(y=1, color='r', linestyle='--')
-plt.axhline(y=0, color='k', linestyle='--')
-plt.axvline(x=Mp)
-plt.axvline(x=Mpng, color='orange')
-# plt.axvline(x=Mpng2, color='orange')
-plt.title(f'f(M)/f_pbh, {Wf} Smoothing function')
-# plt.ylim(1e-14,5e0)
-# plt.axhline(y=1, color='r', linestyle='--')
-plt.xlabel(r'$M_{\rm PBH}$')
-plt.ylabel(r'$f(M)/f_{\rm PBH}$')
-plt.yticks(list(plt.yticks()[0]) + [0])
-# plt.savefig(pathfigs+f'f(M)-{Wf}-norm-g{gval}-symlog.png')
-# plt.savefig(pathfigs+f'f(M)-{Wf}-norm-g{gval}-symlog.svg')
-plt.show()
-
-# plt.plot(Mz,f/fpeak,'o',label='f')
-# plt.plot(Mz,fng/fngpeak ,'o',label='f_ng')
+# plt.plot(Mz,f/f_pbh,'o',label='f')
+# plt.plot(Mz,fng/fng_pbh,'o',label='f_ng')
 # plt.xscale('log')
 # plt.yscale('symlog')
 # plt.legend(loc='right', bbox_to_anchor=(1, 0.85))
@@ -615,12 +558,32 @@ plt.show()
 # plt.axvline(x=Mp)
 # plt.axvline(x=Mpng, color='orange')
 # # plt.axvline(x=Mpng2, color='orange')
-# plt.title(f'f(M)/f_peak, {Wf} Smoothing function')
+# plt.title(f'f(M)/f_pbh, {Wf} Smoothing function')
 # # plt.ylim(1e-14,5e0)
 # # plt.axhline(y=1, color='r', linestyle='--')
 # plt.xlabel(r'$M_{\rm PBH}$')
-# plt.ylabel(r'$f(M)/f_{\rm peak}$')
+# plt.ylabel(r'$f(M)/f_{\rm PBH}$')
+# plt.yticks(list(plt.yticks()[0]) + [0])
+# # plt.savefig(pathfigs+f'f(M)-{Wf}-norm-g{gval}-symlog.png')
+# # plt.savefig(pathfigs+f'f(M)-{Wf}-norm-g{gval}-symlog.svg')
 # plt.show()
+
+plt.plot(Mz,f/fpeak,'o',label='f')
+plt.plot(Mz,fng/fngpeak ,'o',label='f_ng')
+plt.xscale('log')
+plt.yscale('symlog')
+plt.legend(loc='right', bbox_to_anchor=(1, 0.85))
+plt.axhline(y=1, color='r', linestyle='--')
+plt.axhline(y=0, color='k', linestyle='--')
+plt.axvline(x=Mp)
+plt.axvline(x=Mpng, color='orange')
+# plt.axvline(x=Mpng2, color='orange')
+plt.title(f'f(M)/f_peak, {Wf} Smoothing function')
+# plt.ylim(1e-14,5e0)
+# plt.axhline(y=1, color='r', linestyle='--')
+plt.xlabel(r'$M_{\rm PBH}$')
+plt.ylabel(r'$f(M)/f_{\rm peak}$')
+plt.show()
 
 
 # # plot without v lines
