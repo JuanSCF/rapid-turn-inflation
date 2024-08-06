@@ -36,7 +36,7 @@ ki=3*10**ki
 kf=3*10**kf
 
 
-nkk=400 #number of steps
+nkk=400 #number of steps. be careful with the number of steps. it can take a lot of time to compute. in my pc 400 steps takes ~1.2 hour. 250 may be a good number, taking like 15-20 mins
 
 kk = np.geomspace(ki, kf, nkk,dtype='float64')
 k1=kk
@@ -74,6 +74,7 @@ full_path = f'C:\ZZZ\Laburos\Codes\\newdata\datadbs-gth-{nkk}-steps-3e{kikf}-lam
 #     else:
 #         return 0
 
+# the definition of w_- \equiv wm is between eqs 3.101 and 3.102
 def wm(k):
     conditions = [
         k > k0 * L,
@@ -89,6 +90,8 @@ def wm(k):
 
 # sin(a+bi)=sin(a)cosh(b)+icos(a)sinh(b)
 # sin(1j*20) = np.sinh(20) * 1j
+
+# see eq. 3.104
 def sinwm(k):
     a = np.sin(wm(k)*dN)
     b = wm(k)
@@ -96,17 +99,19 @@ def sinwm(k):
     # return np.where( np.logical_or(wm(k)==1e-6 , wm(k)==0) , dN*np.cos(wm(k)) , (a/b).real)  
     # return np.where( wm(k)==1e-6, dN, (a/b).real)  
 
+# see eq. 3.102
 def GC(k):
     a= ( -1j*(1.+2.*(k/k0)**2.)*k0/k*np.cos(wm(k)*dN).real -2.*(k/k0)**2.*sinwm(k) )*np.cos(k/k0*np.exp(-dN/2.))
     b= ( (2j+1j*(k0/k)**2.-2.*k/k0)*np.cos(wm(k)*dN).real +1j*((2.+(k0/k)**2.)*wm(k)**2.-2j*k/k0)*sinwm(k)  )*np.sin(k/k0*np.exp(-dN/2.))
     return 1j/(8.*k**3.) *(a+b)
     
+# see eq. 3.103    
 def GS(k):
     a = ( (2j*k/k0*wm(k)**2.+1.+2.*(k/k0)**2.)*sinwm(k) -(1.-2.*(k/k0)**2.-2j*k/k0)*np.cos(wm(k)*dN).real )*np.cos(k/k0*np.exp(-dN/2.))
     b = ( (1.+2.*(k/k0)**2.)*k/k0*sinwm(k) -2j*(k/k0)**2.*np.cos(wm(k)*dN).real )*np.sin(k/k0*np.exp(-dN/2.))
     return 1j/(8.*k**3.) *(a+b)
 
-# @numba.jit
+# see eq. 3.101 
 def bs(k1,k2,x):
     a = GC(k1)*GC(k2)*GC(np.sqrt( k1**2.+k2**2.-2.*k1*k2*x ))*( 1./(wm(k1)+wm(k2)+wm(np.sqrt( k1**2.+k2**2.-2.*k1*k2*x ))) *np.sin((wm(k1)+wm(k2)+wm(np.sqrt( k1**2.+k2**2.-2.*k1*k2*x )))*dN) +1./(wm(k1)-wm(k2)-wm(np.sqrt( k1**2.+k2**2.-2.*k1*k2*x ))) *np.sin((wm(k1)-wm(k2)-wm(np.sqrt( k1**2.+k2**2.-2.*k1*k2*x )))*dN)  +1./(-wm(k1)-wm(k2)+wm(np.sqrt( k1**2.+k2**2.-2.*k1*k2*x ))) *np.sin((-wm(k1)-wm(k2)+wm(np.sqrt( k1**2.+k2**2.-2.*k1*k2*x )))*dN) +1./(-wm(k1)+wm(k2)-wm(np.sqrt( k1**2.+k2**2.-2.*k1*k2*x ))) *np.sin((-wm(k1)+wm(k2)-wm(np.sqrt( k1**2.+k2**2.-2.*k1*k2*x )))*dN) )
     b = GS(k1)*GS(k2)*GS(np.sqrt( k1**2.+k2**2.-2.*k1*k2*x ))/(wm(k1)*wm(k2)*wm(np.sqrt( k1**2.+k2**2.-2.*k1*k2*x ))) *( 1./(wm(k1)+wm(k2)+wm(np.sqrt( k1**2.+k2**2.-2.*k1*k2*x )))*(np.cos((wm(k1)+wm(k2)+wm(np.sqrt( k1**2.+k2**2.-2.*k1*k2*x )))*dN)-1) +1./(wm(k1)-wm(k2)-wm(np.sqrt( k1**2.+k2**2.-2.*k1*k2*x )))*(np.cos((wm(k1)-wm(k2)-wm(np.sqrt( k1**2.+k2**2.-2.*k1*k2*x )))*dN)-1)  +1./(-wm(k1)-wm(k2)+wm(np.sqrt( k1**2.+k2**2.-2.*k1*k2*x )))*(np.cos((-wm(k1)-wm(k2)+wm(np.sqrt( k1**2.+k2**2.-2.*k1*k2*x )))*dN)-1) +1./(-wm(k1)+wm(k2)-wm(np.sqrt( k1**2.+k2**2.-2.*k1*k2*x )))*(np.cos((-wm(k1)+wm(k2)-wm(np.sqrt( k1**2.+k2**2.-2.*k1*k2*x )))*dN)-1)     )
@@ -125,8 +130,9 @@ def bs(k1,k2,x):
     d6 = GC(np.sqrt( k1**2.+k2**2.-2.*k1*k2*x ))*GS(k1)*GS(k2)/(wm(k1)*wm(k2)) *( -1./(wm(np.sqrt( k1**2.+k2**2.-2.*k1*k2*x ))+wm(k1)+wm(k2))*np.sin((wm(np.sqrt( k1**2.+k2**2.-2.*k1*k2*x ))+wm(k1)+wm(k2))*dN) +1./(wm(np.sqrt( k1**2.+k2**2.-2.*k1*k2*x ))-wm(k1)+wm(k2))*np.sin((wm(np.sqrt( k1**2.+k2**2.-2.*k1*k2*x ))-wm(k1)+wm(k2))*dN) +1./(wm(np.sqrt( k1**2.+k2**2.-2.*k1*k2*x ))+wm(k1)-wm(k2))*np.sin((wm(np.sqrt( k1**2.+k2**2.-2.*k1*k2*x ))+wm(k1)-wm(k2))*dN) -1./(-wm(np.sqrt( k1**2.+k2**2.-2.*k1*k2*x ))+wm(k1)+wm(k2))*np.sin((-wm(np.sqrt( k1**2.+k2**2.-2.*k1*k2*x ))+wm(k1)+wm(k2))*dN) )
 
     r = a+b+c1+d1+c2+d2+c3+d3+c4+d4+c5+d5+c6+d6
-    return 3.*r.imag*(k1*k2)**2.*(k1**2.+k2**2.-2.*k1*k2*x)/(2*np.pi**2.)**2
-    # return 3.*(k1*k2)**2.*(k1**2.+k2**2.-2.*k1*k2*x)*r
+    # return 3.*r.imag # bs with dimensions
+    return 3.*r.imag*(k1*k2)**2.*(k1**2.+k2**2.-2.*k1*k2*x)/(2*np.pi**2.)**2 # dimensionless bs. see eq. 4.74
+    # return 3.*r.imag*(k1*k2)**2.*(k1**2.+k2**2.-2.*k1*k2*x) # another convention for the dbs
 
 
 

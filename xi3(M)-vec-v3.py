@@ -223,11 +223,13 @@ def Intarray3D_vec(f, array1, array2, array3):
 ########################################################################
 ########################################################################
 
+# the definition of Mcal \equiv \mathcal{M} is between eqs. 6.15 and 6.16
 def Mcal(k,q):
     # q=q[:, None, None]
     m=4./9. *(k/q)**2.  *W(k,q)
     return m
 
+# see eq 6.20 for the def with the dbs and 6.19 for the bs with dimensions
 def integrandxi3(Mh,k1,k2,x):
     q=kofMH(Mh)
     m1=Mcal(k1,q)
