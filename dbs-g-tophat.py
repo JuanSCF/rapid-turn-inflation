@@ -1,4 +1,4 @@
-#bs-numbers-generator.py
+#dbs-numbers-generator.py
 
 # from scipy.interpolate import interp1d
 # from scipy.interpolate import interpn
@@ -26,22 +26,17 @@ dN=0.1
 n=1
 L=n*251.327
 k0 = 1e11 # Mpc^-1 . '''this gives k_peak=1.287e13 Mpc^-1'''
-
-# L = 213.628
-# k0 = 1.57e7 # this is for Mpeak~1e-5 M_\odot
-
-# L = 163.363
-# k00 = 2.05e4 # this is for Mpeak~1e1 M_\odot
+# k0 = 1.7e9 # Mpc^-1 . '''this gives M_peak=1e-5 M_\odot'''
 
 # initial and final k that will be integrated
-ki=12
-kf=14
+ki=11
+kf=15
 kikf=str(ki)+str(kf)
-ki=1*10**ki 
-kf=1*10**kf
+ki=3*10**ki 
+kf=3*10**kf
 
 
-nkk=350 #number of steps
+nkk=400 #number of steps
 
 kk = np.geomspace(ki, kf, nkk,dtype='float64')
 k1=kk
@@ -65,11 +60,11 @@ cwd = os.getcwd()
 data_directory = os.path.join(cwd, 'data')
 
 # File name to save bs data
-databs_file = f'databs-gth-{nkk}-steps-{kikf}-lambda-{n}L0.npy'
+databs_file = f'datadbs-gth-{nkk}-steps-{kikf}-lambda-{n}L0.npy'
 
 # Construct the full path including the directory
 full_path = os.path.join(data_directory, databs_file)
-
+full_path = f'C:\ZZZ\Laburos\Codes\\newdata\datadbs-gth-{nkk}-steps-3e{kikf}-lambda-{n}L0.npy'
 
 # def wm(k):
 #     if k>k0*L:
@@ -90,7 +85,7 @@ def wm(k):
         1j * np.sqrt(  abs(k/k0 * L - (k/k0)**2. ) )
     ]
     
-    return np.select(conditions, choices, default=1e-6)
+    return np.select(conditions, choices, default=1e-2)
 
 # sin(a+bi)=sin(a)cosh(b)+icos(a)sinh(b)
 # sin(1j*20) = np.sinh(20) * 1j
@@ -130,7 +125,7 @@ def bs(k1,k2,x):
     d6 = GC(np.sqrt( k1**2.+k2**2.-2.*k1*k2*x ))*GS(k1)*GS(k2)/(wm(k1)*wm(k2)) *( -1./(wm(np.sqrt( k1**2.+k2**2.-2.*k1*k2*x ))+wm(k1)+wm(k2))*np.sin((wm(np.sqrt( k1**2.+k2**2.-2.*k1*k2*x ))+wm(k1)+wm(k2))*dN) +1./(wm(np.sqrt( k1**2.+k2**2.-2.*k1*k2*x ))-wm(k1)+wm(k2))*np.sin((wm(np.sqrt( k1**2.+k2**2.-2.*k1*k2*x ))-wm(k1)+wm(k2))*dN) +1./(wm(np.sqrt( k1**2.+k2**2.-2.*k1*k2*x ))+wm(k1)-wm(k2))*np.sin((wm(np.sqrt( k1**2.+k2**2.-2.*k1*k2*x ))+wm(k1)-wm(k2))*dN) -1./(-wm(np.sqrt( k1**2.+k2**2.-2.*k1*k2*x ))+wm(k1)+wm(k2))*np.sin((-wm(np.sqrt( k1**2.+k2**2.-2.*k1*k2*x ))+wm(k1)+wm(k2))*dN) )
 
     r = a+b+c1+d1+c2+d2+c3+d3+c4+d4+c5+d5+c6+d6
-    return 3.*r.imag
+    return 3.*r.imag*(k1*k2)**2.*(k1**2.+k2**2.-2.*k1*k2*x)/(2*np.pi**2.)**2
     # return 3.*(k1*k2)**2.*(k1**2.+k2**2.-2.*k1*k2*x)*r
 
 
@@ -206,9 +201,9 @@ print(f"Computation completed in {duration:.2f} seconds")
 ##########################################################
 
 # Save the data to a .npy file
-# np.save(full_path, databs)
+np.save(full_path, databs)
 
-np.save(f'C:\ZZZ\Laburos\Codes\\newdata\databs-gth-{nkk}-steps-{kikf}-lambda-{n}L0.npy', databs)
+
 
 
 # df = pd.DataFrame({
@@ -236,7 +231,7 @@ np.save(f'C:\ZZZ\Laburos\Codes\\newdata\databs-gth-{nkk}-steps-{kikf}-lambda-{n}
 #         plt.show()
 
 
-print('kikf:', kikf)
+print(f'ki: {ki:.0e}, kf: {kf:.0e}')
 print(' ')
 
 # Find the maximum value

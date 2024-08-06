@@ -21,9 +21,32 @@ matplotlib.rcParams['text.usetex'] = True
 #J
 import tqdm as tqdm
 
+# d = 3.75*np.pi
+# enh=np.exp(2*d)/(4*d)**2.
+# print(f'{enh:.2e}')
+# 2*d*10
+
 deltaN = 0.1
-L = 251.327
+L = 251.327 # -> f_pbh = 2.56e+11 d = 4.00*np.pi
+# L = 238.761 # -> f_pbh = 1.03e+07 d = 3.80*np.pi
+# L = 233.106 # -> f_pbh = 0.2459 d = 3.71*np.pi
+# L = 233.420 # -> f_pbh = 0.6088 d = 3.715*np.pi
+# L = 233.483 # -> f_pbh = 0.7272 d = 3.716*np.pi
+# L = 233.546 # -> f_pbh = 0.8674 d = 3.717*np.pi
+# L = 233.609 # -> f_pbh = 1.0331 d = 3.718*np.pi
+# L = 233.672 # -> f_pbh = 1.2282 d = 3.719*np.pi
+# L = 233.5900 # -> f_pbh = 0.9802 d = 3.7177*np.pi
+L = 233.5963 # -> f_pbh = 0.9975 d = 3.7178*np.pi
+# this L gives kpeak ~ 1.17e13 Mpc^-1
+# ESTO DE ARRIBA SOLO PARA Wthtf con deltac=0.41 !!!!
+# deltac=0.45 -> fpbh=1.378e-03, deltac=0.5 -> fpbh=1.633e-07
 k00 = 1e11 # Mpc^-1
+
+# L = 213.628
+# k00 = 1.57e7 # this is for Mpeak~1e-5
+
+# L = 163.363
+# k00 = 2.05e4 # this is for Mpeak~1e1
 '''this gives k_peak=1.287e13 Mpc^-1'''
 
 #ps cris en funcion de kappa=k/k0
@@ -36,7 +59,7 @@ def DeltaZetaAnalytic(K):
 # pz = [DeltaZetaAnalytic(k) for k in kk]
 # pz = np.array(pz)
 
-kk = np.geomspace(1e8, 1e15, 15000)
+kk = np.geomspace(1e7, 1e15, 15000)
 '''aumentar rango de integracion''' #-> disminuye el valor de Mpeak
 pz = [DeltaZetaAnalytic(k/k00) for k in kk]
 '''computing ps for kappa=k/k0'''
@@ -50,17 +73,20 @@ cwd = os.getcwd()
 # Load the data from the .npy file
 # kk, pz= np.load('my_data.npy')
 
-Wf='Wthtf'
+Wf='Wthtf' # remember to change W2 in sigmaR2 calc below
 
 gamma=0.36
-if Wf=='Wg':
-  deltac = 0.18
-  C=1.44
-  C=4
-else:
-  deltac = 0.5
-  C=4.
+deltac = 0.5
+C=4.
 OmegaCDM=0.264
+# if Wf=='Wg':
+#   deltac = 0.18
+#   C=1.44
+#   C=4
+# else:
+#   deltac = 0.5
+#   C=4.
+
 
 
 
@@ -79,8 +105,9 @@ plt.show()
 # plt.plot(kk, pz)
 
 Omegam = 0.315 #???
-Meq=(2.8)*10**17. #solar masses
-keq=0.01*(Omegam/0.31) #Mpc^-1
+Meq = (2.8)*10**17. #solar masses
+keq = 0.01*(Omegam/0.31) #Mpc^-1
+keq = 0.01
 
 # CMBindex=np.argmin(np.abs(Nexit0-(Nexit0[0]+3)))
 CMBindex=np.argmin(np.abs(Nexit0-(-3))) 
@@ -122,20 +149,20 @@ kfeat=kfeatn
 k0=k0/kCMB*0.05
 Lk0=np.log(k0)
 Lk=np.log(k)
-P0=2.4*10**-9
-P0=np.ones(len(Nexit0))*P0
-P0fk=interp1d(Lk0,P0,bounds_error=False, kind='cubic',fill_value="extrapolate")
+P0 = 2.4*10**-9
+P0 = np.ones(len(Nexit0))*P0
+P0fk = interp1d(Lk0,P0,bounds_error=False, kind='cubic',fill_value="extrapolate")
 #Jacopo:
 #here I should import the Power spectrum numerical one with his k , interpolate and then extend to all the k0
 
-norm=10**(-9)/np.exp(P0[CMBindex])
+norm = 10**(-9)/np.exp(P0[CMBindex])
 
 #Numerics,
 
 ##############
 #ver que pasa si saco el savgol_filter
 ############
-P= savgol_filter(np.log(pz), 31, 3)
+P = savgol_filter(np.log(pz), 31, 3)
 # P= np.log(pz) #js 
 Pfk=interp1d(Lk,P,bounds_error=False, kind='cubic', fill_value="extrapolate")
 nn = np.exp(P0fk(Lk[0]))/np.exp(Pfk(Lk[0]))  #Jacopo: #you can do this only if the rescaling happens in a region where there is no enhancement
@@ -173,6 +200,12 @@ plt.plot(Lk0, np.exp(PfkL(Lk0)),'r')
 plt.yscale('log')
 #plt.xscale('log')
 plt.show()
+
+q0 = np.geomspace(2.7, 1e15, 15000)
+Lq0 = np.log(q0)
+Pq0 = Pfk(np.log(q0))
+# np.savez('Pq0.npz', q0=q0, Pq0=Pq0)
+
 #sys.exit()
 plt.plot(k0,Pfk(Lk0),'b')
 #plt.plot(kr,np.exp(Pappr(Lkr)),'--')
@@ -192,7 +225,9 @@ ppeak=np.argmin(np.abs(Pfk(Lk)-Ppeak))
 kpeak=k[int(ppeak)]
 
 Npeak=Nexit[int(ppeak)]
+
 print('00')
+
 plt.figure(00)
 plt.plot(Nexit,Pfk(Lk),'--')
 plt.axvline(x=Npeak)
@@ -287,7 +322,9 @@ csrad=np.sqrt(1./3.)
 podria utilizar Mz en vez de kz y ver que pasa con la varianza
 '''
 for i in tqdm.tqdm(range(0, nkz)):
-    # W2[i,:] = np.exp(-(q[:]/keq)**2*(Mz[i]/Meq)) # Gaussian
+    # W2[i,:] = np.exp(-0.5*(q[:]/keq)**2*(Mz[i]/Meq)) # Gaussian 4, M as input
+    # W2[i,:] = np.exp(-0.5*(q[:]/kz[i])**2)# Gaussian 4
+    # W2[i,:] = np.exp(-0.25*(q[:]/kz[i])**2)*(3.*(np.sin(csrad*q[:]/kz[i])-csrad*q[:]/kz[i]*np.cos(csrad*q[:]/kz[i]))/(csrad*q[:]/kz[i])**3.) # Gaussian 4 + transfer
     # W2[i,:] = 3.*(np.sin(q[:]/kz[i])-q[:]/kz[i]*np.cos(q[:]/kz[i]))/(q[:]/kz[i])**3. # top-hat
     W2[i,:] = (3.*(np.sin(q[:]/kz[i])-q[:]/kz[i]*np.cos(q[:]/kz[i]))/(q[:]/kz[i])**3.)*(3.*(np.sin(csrad*q[:]/kz[i])-csrad*q[:]/kz[i]*np.cos(csrad*q[:]/kz[i]))/(csrad*q[:]/kz[i])**3.)
     W2[i,:] = (W2[i,:])**2
@@ -401,9 +438,12 @@ betamono=2*frac*sigmaR2/deltac/np.sqrt(2*np.pi*sigmaR2)*np.exp(-deltac**2/(2*sig
 fmono=1./OmegaCDM*np.sqrt(Meq/MH)*betamono
 
 plt.plot(MH,fmono,'o',label='$f(M)$')
+# plt.plot(MH,fmono/Intarray_vec(-fmono, LMH), label='$f(M)$')
 plt.yscale('log')
 plt.xscale('log')
 plt.title('f mono',fontsize=16)
+plt.ylim(1e-10, 1e15)
+# plt.ylim(1e-2, 3)
 plt.show()
 # ############################################
 
@@ -425,13 +465,15 @@ Lkzr=np.log(kzr)
 plt.figure(22)
 plt.plot(k,Pfk(Lk),'y',label='$P_z$')
 plt.plot(kzr,Pfk(Lkzr),'k,--',label='relevant k',linewidth=1.3)
-plt.axvline(x=kpeak)
+# plt.axvline(x=kpeak)
 plt.plot(kz,sigmaR2,'r',label='$\sigma_R$')
 plt.plot(kzr,sigmaR2r,'k,--',linewidth=1.3)
 #plt.plot(M,f1,'--')
 plt.legend(fontsize=10)
 plt.yscale('log')
 plt.xscale('log')
+plt.axhline(y=0.01)
+plt.ylim(1e-12, 1e-1)
 plt.show()
 
 fpeak=np.amax(f)
@@ -487,9 +529,9 @@ plt.xscale('log')
 print('Mpeak=',Mp)
 plt.show()
 
-# np.savez(cwd+'\\bs\\data\\'+Wf+'-gaussian-data-C4-deltac05.npz', kz=kz, sigmaR2=sigmaR2, f=f, fpeak=fpeak, OmegaPBH=OmegaPBH, Mp=Mp)
-# np.savez(cwd+'\\bs\\data\\gaussian-data-C'+str(C)+'-deltac'+str(deltac)+'-'+Wf+'.npz', kz=kz, sigmaR2=sigmaR2, f=f, fpeak=fpeak, OmegaPBH=OmegaPBH, Mp=Mp)
-# np.savez('data\\gaussian-data-C'+str(C)+'-deltac'+str(deltac)+'-'+Wf+'.npz', kz=kz, sigmaR2=sigmaR2, f=f, fpeak=fpeak, OmegaPBH=OmegaPBH, Mp=Mp)
+############# save data ################
+# np.savez(f'data\\gaussian-data-{Wf}-{deltac}-deltac.npz', kz=kz, sigmaR2=sigmaR2, f=f, fpeak=fpeak, OmegaPBH=OmegaPBH, Mp=Mp)
+# np.savez(f'data\\gaussian-data-{Wf}-1e-5.npz', kz=kz, sigmaR2=sigmaR2)
 
 plt.plot(MH,fmono,'o', label='$fmono$')
 plt.plot(M,f,'o', label='$f(M)$')
@@ -500,10 +542,14 @@ plt.legend()
 plt.show()
 
 fpbhmono=-Intarray_vec(fmono,LMH)
-
+fpbhex = Intarray_vec(f,LM)
+fmono_pnorm = fmono/np.amax(fmono)
+fex_pnorm = f/np.amax(f)
+fmono_fnorm = fmono/fpbhmono
+fex_fnorm = f/fpbhex
 # plt.plot(MH,fmono/fpbhmono, label='Monochromatic')
-plt.plot(MH,fmono/np.amax(fmono), '-.', label='Monochromatic')
-plt.plot(M,f/np.amax(f), label='Extended')
+plt.plot(MH, fmono_pnorm, '-.', label='Monochromatic')
+plt.plot(M, fex_pnorm, label='Extended')
 plt.yscale('log')
 plt.xscale('log')
 plt.title(f'PBH Mass Function Gaussian Statistics {Wf}', fontsize=16)
@@ -512,9 +558,12 @@ plt.xlabel(r'$M/M_\odot$')
 plt.ylabel(r'$f(M)$')
 plt.axhline(y=1, color='r', linestyle='--')
 plt.ylim(1e-64, 10)
+plt.xlim(1e-17, 4e-9)
+plt.axvline(x=MH[np.argmax(fmono_pnorm)], linestyle='-.')
+plt.axvline(x=M[np.argmax(fex_pnorm)])
 # plt.yticks(list(plt.yticks()[0]) + [1])
-# plt.savefig(f'C:\ZZZ\Laburos\Codes\\figss\Gaussian-f\\Gaussian-f(M)-{Wf}.png')
-# plt.savefig(f'C:\ZZZ\Laburos\Codes\\figss\Gaussian-f\\Gaussian-f(M)-{Wf}.svg')
+# plt.savefig(f'C:\ZZZ\Laburos\Codes\\figss\Gaussian-f\\both\\Gaussian-f(M)-{Wf}-deltac-{deltac}.png')
+# plt.savefig(f'C:\ZZZ\Laburos\Codes\\figss\Gaussian-f\\both\\Gaussian-f(M)-{Wf}-deltac-{deltac}.svg')
 plt.show()
 
 # wthtf_var = sigmaR2
@@ -526,62 +575,30 @@ if Wf=='Wthtf':
   wthtf_fmono = fmono/np.amax(fmono)
   wthtf_Mp = M[np.argmax(f)]
   wthtf_Mpmono = MH[np.argmax(fmono)]
-elif Wf=='Wgc4':
-  wgc4_f = f/np.amax(f)
-  wgc4_fmono = fmono/np.amax(fmono)
-  wgc4_Mp = M[np.argmax(f)]
-  wgc4_Mpmono = MH[np.argmax(fmono)]
+  wthtf_fmono_fnorm = fmono_fnorm
+  wthtf_fex_fnorm = fex_fnorm
+  wthtf_var = sigmaR2
+elif Wf=='Wg4':
+  wg4_f = f/np.amax(f)
+  wg4_fmono = fmono/np.amax(fmono)
+  wg4_Mp = M[np.argmax(f)]
+  wg4_Mpmono = MH[np.argmax(fmono)]
+  wg4_fmono_fnorm = fmono_fnorm
+  wg4_fex_fnorm = fex_fnorm
+  wg4_var = sigmaR2
 elif Wf=='Wg':
   wg_f = f/np.amax(f)
   wg_fmono = fmono/np.amax(fmono)
   wg_Mp = M[np.argmax(f)]
   wg_Mpmono = MH[np.argmax(fmono)]
+  wg_fex_fnorm = fex_fnorm
 elif Wf=='Wth':
   wth_f = f/np.amax(f)
   wth_fmono = fmono/np.amax(fmono)
   wth_Mp = M[np.argmax(f)]
   wth_Mpmono = MH[np.argmax(fmono)]
+  wth_fmono_fnorm = fmono_fnorm
+  wth_fex_fnorm = fex_fnorm
+  wth_var = sigmaR2
 
-
-# # plt.plot(MH, fmono/np.amax(fmono), color='#800020', label = f'Gaussian C=4')
-# # plt.plot(MH, wth_fmono, label = f'Top-hat')
-# # plt.plot(MH, wthtf_fmono, '--', color='#6EB5FF', label = f'Top-hat + transfer function')
-# # plt.plot(MH, wgc4_fmono, 'k', label = r'Gaussian')
-# # plt.plot(MH, wg_fmono, '-.', label = r'Gaussian, $\delta_c=0.18$')
-# # MH2 = np.geomspace(MH[-1], MH[0], 4000)
-# plt.plot(M, wth_f, label = f'Top-hat')
-# plt.plot(M, wthtf_f, '--', color='#6EB5FF', label = f'Top-hat + transfer function')
-# plt.plot(M, wgc4_f, 'k', label = r'Gaussian')
-# plt.plot(M, wg_f, '-.', label = r'Gaussian, $\delta_c=0.18$')
-# plt.yscale('log')
-# plt.xscale('log')
-# plt.title('PBH Mass Function, Gaussian Statistics', fontsize=16)
-# plt.legend()
-# plt.xlabel(r'$M/M_\odot$', fontsize=14)
-# plt.ylabel(r'$f(M)$', fontsize=14)
-# plt.axhline(y=1, color='r', linestyle='--')
-# plt.ylim(1e-64, 10)
-# # plt.yticks(list(plt.yticks()[0]) + [1])
-# # plt.savefig('C:\ZZZ\Laburos\Codes\\figss\Gaussian-f\\mono.png')
-# # plt.savefig('C:\ZZZ\Laburos\Codes\\figss\Gaussian-f\\mono.svg')
-# # plt.savefig('C:\ZZZ\Laburos\Codes\\figss\Gaussian-f\\ex.png')
-# # plt.savefig('C:\ZZZ\Laburos\Codes\\figss\Gaussian-f\\ex.svg')
-# plt.show()
-
-
-# plt.plot(Mz, wth_var, label='Top-hat')
-# plt.plot(Mz, wthtf_var, '--', label=f'Top-hat + transfer function')
-# plt.plot(Mz, wg_var, '-.', color='purple', label='Gaussian')
-# plt.legend(fontsize=17)
-# plt.yscale('log')
-# plt.xscale('log')
-# # plt.title('Variance with different smoothing functions', fontsize=16)
-# plt.legend()
-# plt.xlabel(r'$M_H/M_\odot$', fontsize=15)
-# plt.ylabel(r'$\sigma^2_{M_H}$', rotation=90, fontsize=15)
-# plt.ylim(1e-11, 0.5)
-# # plt.gca().yaxis.set_label_coords(-0.1, 50)  # Set the position of the ylabel
-# # plt.gca().set_ylabel(r'$\sigma^2_{M_H}$', rotation=0, fontsize=15)
-# # plt.savefig('C:\ZZZ\Laburos\Codes\\figss\Gaussian-f\\vars.png')
-# # plt.savefig('C:\ZZZ\Laburos\Codes\\figss\Gaussian-f\\vars.svg')
-# plt.show()
+print (r'$f_{PBH}$ =', f'{OmegaPBH:.3e}')
