@@ -14,14 +14,26 @@ from scipy.interpolate import interp1d
 
 # power spectrum parameters
 deltaN=0.1
-n=1
-L0=251.327
-L=n*L0
+
+# L = 251.327
+# L = 233.158 # -> mono: f_peak = 0.997 fpbh = 33.47%    d = x*np.pi
+# L = 233.716 # -> ex: fpeak = 0.9983 f_pbh = 89.12%    d = x*np.pi
+
+##################  Wthtf  ######################
+L = 233.548 # fpbh_ex = 56.2174%, fpbh_mono = 99.8%, fpeak_ex = 0.6304, fpeak_mono = 2.927, max ps = 1.61e-2
+# L = 233.758 # fpbh_ex = 99.7919%, fpbh_mono = 176.136%, fpeak_ex = 1.118, fpeak_mono = 5.123, max ps = 1.62e-2
+#################################################
+
+###################  Wg4  #######################
+# L = 226.206 ##### # fpbh mono 99.752%, fpbh ex 41.6659%
+# L = 226.518 ##### #fpbh mono 236.731%, fpbh ex 99.7571%
+#################################################
+
 k0 = 1e11 # Mpc^-1 . '''this gives k_peak=1.287e13 Mpc^-1'''
 
 # initial and final k that will be integrated
 ki = 11
-kf = 13
+kf = 15
 kp = k0*L/2.
 
 kikf = str(ki)+str(kf)
@@ -29,12 +41,10 @@ ki = 3*10**ki
 kf = 3*10**kf
 print(f'ki: {ki:.0e}, kf: {kf:.1e}, kp: {kp:.0e}') #, Mp: {MHofk(kp):.2e}')
 
-
-# test Wg4tf
-Wf = 'Wg4' # Wg, Wg4, Wth, Wthtf 
+Wf = 'Wthtf' # Wg, Wg4, Wth, Wthtf. Wg4tf little smaller than Wg4 alone
 
 nkk = 350 #number of steps
-size = 3000
+size = 4000
 
 
 kk = np.geomspace(ki, kf, nkk, dtype='float64')
@@ -78,7 +88,7 @@ data_directory = os.path.join(cwd, 'data')
 # databs = np.load(f'C:\ZZZ\Laburos\Codes\\newdata\databs-gth-{nkk}-steps-{kikf}-lambda-{n}L0.npy')
 
 # xi3_file=f'xi3-gth-{Wf}-{nkk}-steps-{kikf}-lambda-{n}L0.npy'
-xi3_file=f'xi3d-gth-{Wf}-{nkk}-steps-3e{kikf}-lambda-{n}L0.npy'
+xi3_file=f'xi3d-gth-{Wf}-{nkk}-steps-3e{kikf}-L-{L}.npy'
 xi3_file = os.path.join(data_directory, xi3_file)
 xi3 = np.load(xi3_file)
 
@@ -147,7 +157,9 @@ print(f'Wf: {Wf}, deltac: {deltac}')
 print(' ')
     
 
-fgaussian_data_file = os.path.join(cwd, f'data\\gaussian-data-{Wf}.npz')
+# fgaussian_data_file = os.path.join(cwd, f'data\\gaussian-data-{Wf}.npz')#-233.npz')#
+# np.savez(fgaussian_data_file, kz=kz, sigmaR2=sigmaR2, kpz=k0, pz=PfkE, fmono=fmono, fex=f)
+fgaussian_data_file = os.path.join(cwd, f'data\\gaussian-data-{Wf}-L-{L}.npz')
 fgaussian_data = np.load(fgaussian_data_file)
 
 kz=fgaussian_data['kz']
@@ -155,7 +167,6 @@ sigmaR2=fgaussian_data['sigmaR2']
 MH = MHofk(kz)
 LMH = np.log(MH)
 var = sigmaR2
-
 kzsmall =np.zeros(nkk)
 varsmall =np.zeros(nkk)
 
@@ -197,21 +208,21 @@ def Intarray_vec(f, array):
 ########################################################################
 
 
-plt.plot(kzsmall, xi3,'o')
-plt.plot(kzsmall, xi3)
-plt.xscale('log')
-plt.yscale('symlog')
-plt.axhline(y=0, color='k', linestyle='--')
-plt.title(r'$\xi_3$, 'f'{Wf}')
-plt.xlabel(r'k [Mpc$^{-1}$]')
-plt.show()
+# plt.plot(kzsmall, xi3,'o')
+# plt.plot(kzsmall, xi3)
+# plt.xscale('log')
+# plt.yscale('symlog')
+# plt.axhline(y=0, color='k', linestyle='--')
+# plt.title(r'$\xi_3$, 'f'{Wf}')
+# plt.xlabel(r'k [Mpc$^{-1}$]')
+# plt.show()
 
-# es dificil implementar el savgol acá
-# xi3f = savgol_filter(np.log(xi3), 31, 3)
-# xi3f = savgol_filter((xi3), 31, 3)
-# xi3fi = interp1d(MHsmall, xi3f,bounds_error=False, kind='cubic',fill_value="extrapolate")
 
 # These lines are to extend the xi3 function to the whole range of MH
+# MHsmall=MHsmall[:309]
+# xi3=xi3[:309]
+# varsmall=varsmall[:309]
+# LMHsmall=LMHsmall[:309]
 xi3i = interp1d(MHsmall, xi3,bounds_error=False, kind='cubic',fill_value="extrapolate")
 
 xi3E = np.zeros(len(MH))
@@ -233,17 +244,17 @@ for i in range(0, len(MH)):
         xi3E[i] = xi3[0]
 
 
-plt.plot(MH,xi3E,'o')
-plt.plot(MH,xi3E)
-plt.xscale('log')
-plt.yscale('symlog')
-plt.axhline(y=0, color='k', linestyle='--')
-# plt.xlim(2.5e-16, 2.5e-8)
-plt.yticks(list(plt.yticks()[0]) + [0])
-# plt.legend()
-plt.title(r'$\xi_3$, 'f'{Wf}')
-plt.xlabel(r'$M_H/M_\odot$')
-plt.show()
+# plt.plot(MH, xi3E,'o')
+# plt.plot(MH, xi3E)
+# plt.xscale('log')
+# plt.yscale('symlog')
+# plt.axhline(y=0, color='k', linestyle='--')
+# # plt.xlim(2.5e-16, 2.5e-8)
+# plt.yticks(list(plt.yticks()[0]) + [0])
+# # plt.legend()
+# plt.title(r'$\xi_3$, 'f'{Wf}')
+# plt.xlabel(r'$M_H/M_\odot$')
+# plt.show()
 
 
 # lets compute a g value for every xi3 value
@@ -254,14 +265,54 @@ plt.show()
 # deltac = 1
 gcrits = 6*np.amax(varsmall)**3/abs(xi3[np.argmax(varsmall)])/(deltac**3)
 gcrit = 6*np.amax(var)**3/abs(xi3E[np.argmax(var)])/(deltac**3)
-print(f'gcrit = {gcrit:.2e}, wf = {Wf}, deltac = {deltac}')
+print(f'gcrit = {gcrit:.4e}, wf = {Wf}, deltac = {deltac}')
 
-nn = 0.88 #*0.883
-g0 = gcrits *nn
+# computing g with the k that peaks the PS
+kpz=fgaussian_data['kpz']
+pz=fgaussian_data['pz']
+kpzmax = kpz[np.argmax(pz)]
+Mpzmax = MHofk(kpzmax)
+ipz = np.argmin(abs(kpzmax-kz))
+
+gcritpz = 6*var[ipz]**3/abs(xi3E[ipz])/(deltac**3)
+print(f'gcrit pz = {gcritpz:.4e}')
+
+varIk = interp1d(kz, var,bounds_error=False, kind='cubic',fill_value="extrapolate")
+xi3Ik = interp1d(kzsmall, xi3,bounds_error=False, kind='cubic',fill_value="extrapolate")
+gcritpzI = 6*varIk(kpzmax)**3/abs(xi3Ik(kpzmax))/(deltac**3)
+print(f'gcrit pz Interpolated = {gcritpzI:.4e}')
+print(f'kpz max = {kpzmax:.4e}')
+
+databs = np.load(f'C:\ZZZ\Laburos\Codes\\newdata\datadbs-gth-{nkk}-steps-3e{kikf}-L-{L}.npy')#{n}L0.npy')
+max_value = np.max((databs))
+max_index = np.unravel_index(np.argmax((databs)), databs.shape)
+del databs
+kbs = kk[max_index[0]]
+gcritbsI = 6*varIk(kbs)**3/abs(xi3Ik(kbs))/(deltac**3)
+print(f'gcrit bs Interpolated = {gcritbsI:.4e}')
+
+n = 44 # n=30-35 makes a ng peak appear
+g0 = gcrits *n
+g0 = gcritpzI *n 
 # g0 = 1
-g0n = -gcrit #*nn
+g0n = -gcrit #*n
 # g0 = gvec
+print(' ')
+print(f'n={n}')
+print(' ')
+# plt.plot(MH,gcrits*xi3E,'o')
+# plt.plot(MH,gcrits*xi3E)
+# plt.xscale('log')
+# plt.yscale('symlog')
+# plt.axhline(y=0, color='k', linestyle='--')
+# # plt.xlim(2.5e-16, 2.5e-8)
+# plt.yticks(list(plt.yticks()[0]) + [0])
+# # plt.legend()
+# plt.title(r'$\xi_3$, 'f'{Wf}')
+# plt.xlabel(r'$M_H/M_\odot$')
+# plt.show()
 
+skew = (xi3)/varsmall**1.5
 # plt.figure(00)
 # # plt.plot(MH, g0*(xi3E)/var**1.5, label='skewE w/sigma**3')
 # plt.plot(MHsmall, g0*(xi3)/varsmall**1.5, 'o', label='skew w/sigma**3')
@@ -283,37 +334,37 @@ g0n = -gcrit #*nn
 
 
 # Define a function for setting the ticks and labels on the secondary axis
-def format_func(value, tick_number): #this one is for checking if the values of the ticks kz fit with the x values from MH
+def format_func0(value, tick_number): #this one is for checking if the values of the ticks kz fit with the x values from MH
     return f'{kofMH(value):.1e}'
 def format_func(value, tick_number):
     exponent = int(np.log10(kofMH(value)))
     return r'$10^{{{}}}$'.format(exponent)
 
-fig, ax1 = plt.subplots()
-ax1.plot(MHsmall, g0*(xi3)/varsmall**1.5, 'o', label='skew w/sigma**3')
-ax1.plot(MHsmall, g0*(xi3)/varsmall**1.5, label='skew w/sigma**3')
-ax1.set_ylabel(r'$\xi_3(M_H)$')
-ax1.set_xlabel(r'$M_H/M_\odot$')
-ax1.axhline(y=0, color='k', linestyle='--')
-ax1.set_xscale('log')
-ax1.set_yscale('symlog')
-# ax1.set_legend()
-yticks = list(ax1.get_yticks())
-yticks.append(0)
-ax1.set_yticks(yticks)
-ax1.set_title(f'Skewness, {Wf}')
-# Create a secondary x-axis
-secax = ax1.twiny()
-# Set the tick positions and labels for the secondary x-axis
-secax.set_xscale('log')
+# fig, ax1 = plt.subplots()
+# ax1.plot(MHsmall, g0*(xi3)/varsmall**1.5, 'o', label='skew w/sigma**3')
+# ax1.plot(MHsmall, g0*(xi3)/varsmall**1.5, label='skew w/sigma**3')
+# ax1.set_ylabel(r'$\kappa_3=\dfrac{\xi_3}{\sigma^3}$')
+# ax1.set_xlabel(r'$M_H/M_\odot$')
+# ax1.axhline(y=0, color='k', linestyle='--')
+# ax1.set_xscale('log')
+# ax1.set_yscale('symlog')
+# # ax1.set_legend()
+# yticks = list(ax1.get_yticks())
+# yticks.append(0)
+# ax1.set_yticks(yticks)
+# ax1.set_title(f'Skewness, {Wf}')
+# # Create a secondary x-axis
+# secax = ax1.twiny()
+# # Set the tick positions and labels for the secondary x-axis
+# secax.set_xscale('log')
 
-secax.set_xlim(ax1.get_xlim())
-major_ticks = np.geomspace(MHsmall[-1], MHsmall[0], 4)  # Adjust the number of major ticks as needed
-# Use the conversion function to set the secondary x-axis tick labels
-secax.set_xticks(major_ticks)
-secax.set_xticklabels([format_func(tick, i) for i, tick in enumerate(major_ticks)])
-secax.set_xlabel(r'k [Mpc$^{-1}$]')
-plt.show()
+# secax.set_xlim(ax1.get_xlim())
+# major_ticks = np.geomspace(MHsmall[-1], MHsmall[0], 5)  # Adjust the number of major ticks as needed
+# # Use the conversion function to set the secondary x-axis tick labels
+# secax.set_xticks(major_ticks)
+# secax.set_xticklabels([format_func(tick, i) for i, tick in enumerate(major_ticks)])
+# secax.set_xlabel(r'k [Mpc$^{-1}$]')
+# plt.show()
 
 
 # sys.exit()
@@ -366,30 +417,36 @@ beta_mono_resum = beta_mono_g*np.exp(g0*(xi3E)*(deltac/var)**3/6)
 beta_mono_resumsmall = beta_mono_gsmall*np.exp(g0*(xi3)*(deltac/varsmall)**3/6)
 
 
-# should i plot frac*MH or MH vs beta,f, etc?
-plt.plot(frac*MH, beta_mono_g, label='gaussian')
-# plt.plot(MH, beta_mono_pert, label='pert')
-plt.plot(frac*MH, beta_mono_resum,  label='resum')
-plt.xscale('log')
-plt.yscale('log')
-plt.legend()
-plt.title(f'Monochromatic $\\beta(M_H)$, {Wf}')
-# plt.ylim(1e-20, 1e3)
-# plt.xlim(1e-14, 1e-10)
-plt.xlabel(f'{frac}*' r'$M_H\,/\,M_\odot$')
-plt.show()
+# # should i plot frac*MH or MH vs beta,f, etc?
+# plt.plot(frac*MH, beta_mono_g, label='Gaussian')
+# # plt.plot(MH, beta_mono_pert, label='pert')
+# plt.plot(frac*MH, beta_mono_resum,  label='non-Gaussian')
+# plt.xscale('log')
+# plt.yscale('log')
+# plt.legend()
+# plt.title(f'Monochromatic PBH Abundance, {Wf}, ' r'$\lambda_0=$' f'{L}')
+# # plt.ylim(1e-20, 1e3)
+# plt.xlim(1e-13, 3e-10)
+# plt.ylim(1e-20, 1e-14)
+# plt.ylabel(r'$\beta$')
+# if frac == 1:
+#     plt.xlabel(r'$M_H\,/\,M_\odot$')
+# else:
+#     plt.xlabel(f'{frac}*' r'$M_H\,/\,M_\odot$')
+# plt.show()
 
-plt.plot(frac*MHsmall, beta_mono_gsmall, 'o', label='gaussian')
-# plt.plot(MHsmall, beta_mono_pertsmall, 'o', label='pert')
-plt.plot(frac*MHsmall, beta_mono_resumsmall, 'o', label='resum')
-plt.xscale('log')
-plt.yscale('log')
-plt.legend()
-# plt.ylim(1e-20, 1e3)
-plt.axvline(x=frac*MHngmax, color='k', linestyle='--')
-plt.title(f'Monochromatic $\\beta(M_H)$ small, {Wf}')
-plt.xlabel(f'{frac}*' r'$M_H\,/\,M_\odot$')
-plt.show()
+# plt.plot(frac*MHsmall, beta_mono_gsmall, 'o', label='gaussian')
+# # plt.plot(MHsmall, beta_mono_pertsmall, 'o', label='pert')
+# plt.plot(frac*MHsmall, beta_mono_resumsmall, 'o', label='resum')
+# plt.xscale('log')
+# plt.yscale('log')
+# plt.legend()
+# plt.xlim(1e-13, 3e-10)
+# plt.ylim(1e-20, 1e-14)
+# plt.axvline(x=frac*MHngmax, color='k', linestyle='--')
+# plt.title(f'Monochromatic $\\beta(M_H)$ small, {Wf}')
+# plt.xlabel(f'{frac}*' r'$M_H\,/\,M_\odot$')
+# plt.show()
 
 
 # monochromatic f
@@ -432,60 +489,62 @@ OmegaPBH_mono_resumsmall = OmegaCDM*fpbh_mono_resumsmall
 # plt.legend()
 # plt.show()
 
-plt.plot(frac*MH, beta_mono_g/fpbh_mono_g, label='gaussian')
-# plt.plot(MHsmall, beta_mono_pertsmall, 'o', label='pert')
-plt.plot(frac*MH, beta_mono_resum/fpbh_mono_resum, label='resum')
-plt.xscale('log')
-plt.yscale('log')
-# plt.ylim(1e-16, 4)
-plt.ylim(1e-20, 1e-14)
-# plt.axvline(x=0.2*MHngmax, color='k', linestyle='--')
-plt.axvline(x=frac*MHsmall[np.argmax(beta_mono_resumsmall/fpbh_mono_resumsmall)], color='k', linestyle='--')
-# plt.axhline(y=5.66e-16, color='cyan', linestyle='--', label='outdated present day femtolensing constraint')
-plt.xlabel(r'$M_{\rm PBH}=$' f'{frac}' r'$\,M_H\,/\,M_\odot$')
-plt.title(r'Monochromatic $\beta(M_H)/f_{PBH}$, ' f'{Wf}')
-plt.legend()
-plt.show()
+# plt.plot(frac*MH, beta_mono_g/fpbh_mono_g, label='gaussian')
+# # plt.plot(MHsmall, beta_mono_pertsmall, 'o', label='pert')
+# plt.plot(frac*MH, beta_mono_resum/fpbh_mono_resum, label='resum')
+# plt.xscale('log')
+# plt.yscale('log')
+# # plt.ylim(1e-16, 4)
+# plt.ylim(1e-20, 1e-14)
+# # plt.axvline(x=0.2*MHngmax, color='k', linestyle='--')
+# plt.axvline(x=frac*MHsmall[np.argmax(beta_mono_resumsmall/fpbh_mono_resumsmall)], color='k', linestyle='--')
+# # plt.axhline(y=5.66e-16, color='cyan', linestyle='--', label='outdated present day femtolensing constraint')
+# plt.xlabel(r'$M_{\rm PBH}=$' f'{frac}' r'$\,M_H\,/\,M_\odot$')
+# plt.title(r'Monochromatic $\beta(M_H)/f_{PBH}$, ' f'{Wf}')
+# plt.legend()
+# plt.show()
 
 
-print(f'OmegaPBH_mono_g: {OmegaPBH_mono_g:.2e}, OmegaPBH_mono_gsmall: {OmegaPBH_mono_gsmall:.2e}')
+# print(f'OmegaPBH_mono_g: {OmegaPBH_mono_g:.2e}, OmegaPBH_mono_gsmall: {OmegaPBH_mono_gsmall:.2e}')
 iMHmax_mono = np.argmax(f_mono_resum)
 MHmax_mono = MH[np.argmax(f_mono_resum)]
 
-# frac = 1
-plt.plot(frac*MH, f_mono_g, label='gaussian')
+
+plt.plot(frac*MH, f_mono_g, label='Gaussian')
 # plt.plot(frac*MH, f_mono_pert/fpbh_mono_pert,'o', label='pert')
-plt.plot(frac*MH, f_mono_resum, label='resum')
+plt.plot(frac*MH, f_mono_resum, label='non-Gaussian')
 plt.xscale('log')
 plt.yscale('log')
 plt.xlabel(r'$M_{\rm PBH}\,/\,M_\odot$')
 plt.legend()
-plt.title(f'Monochromatic f(M), {Wf}')
-plt.ylim(1e-14, 1e14)
-plt.xlim(1e-15, 1e-11)
-plt.axvline(x=frac*MHmax_mono, color='k')
-plt.axvline(x=frac*MHngmax, color='k', linestyle='--')
-plt.show()
-
-
-plt.plot(frac*MH, f_mono_g/fpbh_mono_g, '--', label='gaussian')
-# plt.plot(frac*MH, f_mono_pert/fpbh_mono_pert,'o', label='pert')
-plt.plot(frac*MH, f_mono_resum/fpbh_mono_resum, label='resum')
-plt.xscale('log')
-plt.yscale('log')
-plt.xlabel(r'$M_{\rm PBH}\,/\,M_\odot$')
-plt.legend(loc='center right', bbox_to_anchor=(0.999, 0.86))
-plt.title(f'Monochromatic f(M)/fpbh, {Wf}')
-# plt.ylim(1e-10, 1e1)
-plt.ylim(1e-17, 1e1)
-plt.xlim(1e-19, 1e-5)
-plt.axhline(y=1, color='r', linestyle='--')
-# plt.yticks(list(plt.yticks()[0]) + [1])
+plt.title(f'Monochromatic f(M), {Wf}, ' r'$\lambda_0=$' f'{L}')
+plt.ylim(1e-14, 70)
+plt.xlim(3e-14, 3e-10)
+if frac == 1:
+    plt.xlabel(r'$M_H\,/\,M_\odot$')
+else:
+    plt.xlabel(f'{frac}*' r'$M_H\,/\,M_\odot$')
+# plt.axvline(x=frac*MHmax_mono, color='k')
 # plt.axvline(x=frac*MHngmax, color='k', linestyle='--')
-plt.axvline(x=frac*MH[np.argmax(f_mono_g/fpbh_mono_g)], color='k', linestyle=':')
 plt.show()
 
-print(' f_g mono/fpbh peak', np.amax(f_mono_g/fpbh_mono_g),'\n f_ng mono/fpbh peak', np.amax(f_mono_resum/fpbh_mono_resum))
+
+# plt.plot(frac*MH, f_mono_g/fpbh_mono_g, '--', label='gaussian')
+# # plt.plot(frac*MH, f_mono_pert/fpbh_mono_pert,'o', label='pert')
+# plt.plot(frac*MH, f_mono_resum/fpbh_mono_resum, label='resum')
+# plt.xscale('log')
+# plt.yscale('log')
+# plt.xlabel(r'$M_{\rm PBH}\,/\,M_\odot$')
+# plt.legend(loc='center right', bbox_to_anchor=(0.999, 0.86))
+# plt.title(f'Monochromatic f(M)/fpbh, {Wf}')
+# # plt.ylim(1e-10, 1e1)
+# plt.ylim(1e-17, 1e1)
+# plt.xlim(1e-19, 1e-5)
+# plt.axhline(y=1, color='r', linestyle='--')
+# # plt.yticks(list(plt.yticks()[0]) + [1])
+# # plt.axvline(x=frac*MHngmax, color='k', linestyle='--')
+# plt.axvline(x=frac*MH[np.argmax(f_mono_g/fpbh_mono_g)], color='k', linestyle=':')
+# plt.show()
 
 
 #######################################
@@ -513,19 +572,45 @@ for i in tqdm.tqdm(range(len(MH))):
     beta_ex_pert[i] = -Intarray_vec(b, LMH)
     beta_ex_resum[i] = -Intarray_vec(c, LMH)
 
+outdated = 1e-19*(MHsmall/(2.5137e-19))**0.5
+# # plt.plot( MH, beta_ex_pert, label='pert')
+# plt.plot( MH, beta_ex_g, label='Gaussian')
+# plt.plot( MH, beta_ex_resum, label='non-Gaussian')
+# plt.plot(MHsmall, outdated, 'r--', label='Outdated Femtolensing Constraint')
+# plt.xscale('log')
+# plt.yscale('log')
+# plt.xlabel(r'$M_H\,/\,M_\odot$')
+# plt.legend()
+# plt.title(f'Extended PBH Abundance, {Wf}, ' r'$\lambda_0=$' f'{L}')
+# # plt.savefig(f'beta_ex_{Wf}_{n}g.pdf')
+# plt.xlim(1e-14, 3e-10)
+# plt.ylim(1e-20, 1e-14)
+# plt.ylabel(r'$\beta$')
+# if frac == 1:
+#     plt.xlabel(r'$M_H\,/\,M_\odot$')
+# else:
+#     plt.xlabel(f'{frac}*' r'$M_H\,/\,M_\odot$')
+# plt.show()
 
-# plt.plot( MH, beta_ex_pert, label='pert')
-plt.plot( MH, beta_ex_g, label='Gaussian')
-plt.plot( MH, beta_ex_resum, label='non-Gaussian')
-plt.xscale('log')
-plt.yscale('log')
-plt.xlabel(r'$M_H\,/\,M_\odot$')
-plt.legend()
-plt.title(r'Extended $\beta(MH)$' f', g={nn}g$_c$, {Wf}')
-plt.ylim(1e-27, 1e6)
-# plt.savefig(f'beta_ex_{Wf}_{nn}g.pdf')
-plt.show()
 
+# plt.plot( MH, beta_mono_resum, label='NG Monochromatic')
+# plt.plot( MH, beta_ex_resum, label='NG Extended')
+# plt.plot(MHsmall, outdated, 'r--', label='Outdated Femtolensing Constraint')
+# plt.xscale('log')
+# plt.yscale('log')
+# plt.xlabel(r'$M_H\,/\,M_\odot$')
+# plt.legend()
+# plt.title(f'NG PBH Abundance, {Wf}, ' r'$\lambda_0=$' f'{L}')
+# # plt.savefig(f'beta_ex_{Wf}_{n}g.pdf')
+# plt.xlim(1e-14, 3e-10)
+# plt.ylim(1e-20, 1e-14)
+# plt.ylabel(r'$\beta$')
+# # plt.axhline(y=outdated, color='red', linestyle='--', label='outdated present day femtolensing constraint')
+# if frac == 1:
+#     plt.xlabel(r'$M_H\,/\,M_\odot$')
+# else:
+#     plt.xlabel(f'{frac}*' r'$M_H\,/\,M_\odot$')
+# plt.show()
 
 #######################################
 # f extended integration
@@ -569,20 +654,20 @@ OmegaPBH_ex_resum = OmegaCDM*fpbh_ex_resum
 # OmegaPBH_ex_resumsmall = OmegaCDM*fpbh_ex_resumsmall
 
 
-print(f'OmegaPBH_ex_g: {OmegaPBH_ex_g:.2e}')#), OmegaPBH_ex_gsmall: {OmegaPBH_ex_gsmall:.2e}')
+# print(f'OmegaPBH_ex_g: {OmegaPBH_ex_g:.2e}')#), OmegaPBH_ex_gsmall: {OmegaPBH_ex_gsmall:.2e}')
 
 # plt.plot( MH, beta_ex_g, label='Gaussian')
 # plt.plot( MH, beta_ex_resum, label='non-Gaussian')
-plt.plot( MH, beta_ex_g/fpbh_ex_g, label='gaussian')
-plt.plot( MH, beta_ex_resum/fpbh_ex_resum, label='resum')
-plt.xscale('log')
-plt.yscale('log')
-plt.xlabel(r'$M_H\,/\,M_\odot$')
-plt.legend()
-plt.title(r'Extended $\beta(MH)/f_{\rm PBH}$' f', g={nn}g$_c$, {Wf}')
-plt.ylim(1e-39, 1e-7)
-# plt.savefig(f'beta_ex_{Wf}_{nn}g_fpbh.pdf')
-plt.show()
+# plt.plot( MH, beta_ex_g/fpbh_ex_g, label='gaussian')
+# plt.plot( MH, beta_ex_resum/fpbh_ex_resum, label='resum')
+# plt.xscale('log')
+# plt.yscale('log')
+# plt.xlabel(r'$M_H\,/\,M_\odot$')
+# plt.legend()
+# plt.title(r'Extended $\beta(MH)/f_{\rm PBH}$' f', g={n}g$_c$, {Wf}')
+# plt.ylim(1e-39, 1e-7)
+# # plt.savefig(f'beta_ex_{Wf}_{n}g_fpbh.pdf')
+# plt.show()
 
 
 ########################################################
@@ -590,61 +675,63 @@ plt.show()
 ########################################################
 # note that M_peak ~ MHofk(L0*k0*0.5) = 1.77e-13 and maxMpbh = 2.37e-13
 
-plt.plot( MH, f_ex_g, label='gaussian')
+plt.plot( MH, f_ex_g, label='Gaussian')
 # plt.plot(frac*MH, f_ex_pert/fpbh_ex_pert,'o', label='pert')
-plt.plot( MH, f_ex_resum, label='resum')
+plt.plot( MH, f_ex_resum, label='non-Gaussian')
 plt.xscale('log')
 plt.yscale('log')
 plt.xlabel(r'$M_{\rm PBH}\,/\,M_\odot$')
+plt.ylabel(r'$f(M_{\rm PBH})$')
 plt.legend()
-plt.title(f'Extended f(M), {Wf}')
-plt.ylim(1e-12, 1e13)
+plt.title(f'Extended PBH Mass Function, {Wf}, ' r'$\lambda_0=$' f'{L}')
+plt.ylim(1e-18,80)
+plt.xlim(1e-18, 3e-8)
 plt.show()
 
 
 
-plt.plot(MH, f_ex_g/fpbh_ex_g, linestyle='--', color='#6EB5FF', label='gaussian')
-# plt.plot(MH, f_ex_g/fpbh_ex_g,'k--', label='gaussian')
-# plt.plot(frac*MH, f_ex_pert/fpbh_ex_pert,'o', label='pert')
-plt.plot( MH, f_ex_resum/fpbh_ex_resum, color='#ff7f0e', label='resum')
-plt.xscale('log')
-plt.yscale('log')
-plt.xlabel(r'$M_{\rm PBH}=$' f'{frac}*' r'$M_H\,/\,M_\odot$')
-plt.legend(loc='center right', bbox_to_anchor=(0.999, 0.86))
-plt.title(f'Extended f(M)/fpbh, {Wf}')
-# plt.ylim(1e-10, 1e1)
-plt.ylim(1e-17, 1e1)
-plt.xlim(1e-19, 1e-5)
-plt.axhline(y=1, color='r', linestyle='--')
-# plt.axvline(x=MH[imaxM], color='k')
-# plt.axvline(x=frac*MH[np.argmax(f_ex_g/fpbh_ex_g)], color='red')
-# plt.axvline(x=MH[np.argmax(f_ex_resum/fpbh_ex_resum)], color='cyan')
-# plt.yticks(list(plt.yticks()[0]) + [1])
-plt.show()
+# plt.plot(MH, f_ex_g/fpbh_ex_g, linestyle='--', color='#6EB5FF', label='gaussian')
+# # plt.plot(MH, f_ex_g/fpbh_ex_g,'k--', label='gaussian')
+# # plt.plot(frac*MH, f_ex_pert/fpbh_ex_pert,'o', label='pert')
+# plt.plot( MH, f_ex_resum/fpbh_ex_resum, color='#ff7f0e', label='resum')
+# plt.xscale('log')
+# plt.yscale('log')
+# plt.xlabel(r'$M_{\rm PBH}=$' f'{frac}*' r'$M_H\,/\,M_\odot$')
+# plt.legend(loc='center right', bbox_to_anchor=(0.999, 0.86))
+# plt.title(f'Extended f(M)/fpbh, {Wf}')
+# # plt.ylim(1e-10, 1e1)
+# plt.ylim(1e-17, 1e1)
+# plt.xlim(1e-19, 1e-5)
+# plt.axhline(y=1, color='r', linestyle='--')
+# # plt.axvline(x=MH[imaxM], color='k')
+# # plt.axvline(x=frac*MH[np.argmax(f_ex_g/fpbh_ex_g)], color='red')
+# # plt.axvline(x=MH[np.argmax(f_ex_resum/fpbh_ex_resum)], color='cyan')
+# # plt.yticks(list(plt.yticks()[0]) + [1])
+# plt.show()
 
 
-print(np.amax(f_ex_g/fpbh_ex_g), np.amax(f_ex_resum/fpbh_ex_resum))
+# print(np.amax(f_ex_g/fpbh_ex_g), np.amax(f_ex_resum/fpbh_ex_resum))
 
 
 
 # plt.plot(frac*MH, f_mono_g/fpbh_mono_g,'--', label='gaussian mono')
 # plt.plot(frac*MH, f_ex_g/fpbh_ex_g,'-.', label='gaussian ex')
 
-plt.plot( frac*MH, f_mono_resum/fpbh_mono_resum, '--', label='resum mono')
-plt.plot(MH, f_ex_resum/fpbh_ex_resum, label='resum ex')
-plt.xscale('log')
-plt.yscale('log')
-plt.xlabel(r'$M_{\rm PBH}\,/\,M_\odot$')
-plt.title(f'f(M)/fpbh, {Wf}')
-plt.ylim(1e-17, 1e1)
-plt.xlim(1e-19, 1e-5)
-plt.axhline(y=1, color='r', linestyle='--')
-# plt.axvline(x = MH[imaxM], color='k', label='max var')
-# plt.axvline(x = MH[np.argmax(f_mono_resum/fpbh_mono_resum)], color='r', label='max f mono')
-# plt.axvline(x = MH[np.argmax(f_ex_resum/fpbh_ex_resum)], color='cyan', label='max f ex')
-# plt.yticks(list(plt.yticks()[0]) + [1])
-plt.legend(loc='center right', bbox_to_anchor=(0.999, 0.86))
-plt.show()
+# plt.plot( frac*MH, f_mono_resum/fpbh_mono_resum, '--', label='resum mono')
+# plt.plot(MH, f_ex_resum/fpbh_ex_resum, label='resum ex')
+# plt.xscale('log')
+# plt.yscale('log')
+# plt.xlabel(r'$M_{\rm PBH}\,/\,M_\odot$')
+# plt.title(f'f(M)/fpbh, {Wf}')
+# plt.ylim(1e-17, 1e1)
+# plt.xlim(1e-19, 1e-5)
+# plt.axhline(y=1, color='r', linestyle='--')
+# # plt.axvline(x = MH[imaxM], color='k', label='max var')
+# # plt.axvline(x = MH[np.argmax(f_mono_resum/fpbh_mono_resum)], color='r', label='max f mono')
+# # plt.axvline(x = MH[np.argmax(f_ex_resum/fpbh_ex_resum)], color='cyan', label='max f ex')
+# # plt.yticks(list(plt.yticks()[0]) + [1])
+# plt.legend(loc='center right', bbox_to_anchor=(0.999, 0.86))
+# plt.show()
 
 imaxM = np.argmax(var)
 maxM = MH[imaxM]
@@ -660,17 +747,20 @@ ng_pdf = 1./(np.sqrt(2*np.pi*var[imaxM]))*np.exp(-0.5*delta**2/var[imaxM]+g0*xi3
 g_norm = Intarray_vec(g_pdf, delta)
 ng_norm = Intarray_vec(ng_pdf, delta)
 
-plt.plot(delta, g_pdf, label='Gaussian')
-plt.plot(delta, ng_pdf, label='non-Gaussian')
-plt.axvline(x=deltac, color='r', linestyle='--', label = f'$\delta_c={deltac}$')
-plt.axhline(y=0, color='gray', linewidth=0.5)
-plt.legend()
-# plt.title(f'PDF for $M_H={MH[imaxM]:.2e}$, {Wf}')
-plt.title(r'PDF for max $\sigma^2(M_H)$ value, 'f'{Wf}')
-# plt.axvline(x=MHngmax, color='k', linestyle='--')
-plt.show()
+# plt.plot(delta, g_pdf, label='Gaussian')
+# plt.plot(delta, ng_pdf, label='non-Gaussian')
+# plt.axvline(x=deltac, color='r', linestyle='--', label = f'$\delta_c={deltac}$')
+# plt.axhline(y=0, color='gray', linewidth=0.5)
+# plt.legend()
+# # plt.title(f'PDF for $M_H={MH[imaxM]:.2e}$, {Wf}')
+# plt.title(r'PDF for max $\sigma^2(M_H)$ value, 'f'{Wf}')
+# # plt.axvline(x=MHngmax, color='k', linestyle='--')
+# plt.show()
 
-
+fpeak_mono_g = np.amax(f_mono_g)
+fpeak_mono_resum = np.amax(f_mono_resum)
+fpeak_ex_g = np.amax(f_ex_g)
+fpeak_ex_resum = np.amax(f_ex_resum)
 #####################################################
 ############# plots with multiple W's ###############
 #####################################################
@@ -718,8 +808,123 @@ elif Wf == 'Wthtf':
     f_ex_resum_Wthtf = f_ex_resum
     fpbh_ex_g_Wthtf = fpbh_ex_g
     fpbh_ex_resum_Wthtf = fpbh_ex_resum
+#########################
+if Wf == 'Wthtf' and L == 233.548:
+    g0_1 = g0
+    xi3_1 = xi3E
+    var_1 = var
+    xi3small_1 = xi3
+    varsmall_1 = varsmall
+    skew_1 = skew
+    L1 = L
+    Mpeak_mono_g_1 = MH[np.argmax(f_mono_g)]
+    Mpeak_mono_resum_1 = MH[np.argmax(f_mono_resum)]
 
+    beta_mono_g_1 = beta_mono_g
+    beta_mono_resum_1 = beta_mono_resum
+    f_mono_g_1 = f_mono_g
+    f_mono_resum_1 = f_mono_resum
+    fpbh_mono_g_1 = fpbh_mono_g
+    fpbh_mono_resum_1 = fpbh_mono_resum
+
+    beta_ex_g_1 = beta_ex_g
+    beta_ex_resum_1 = beta_ex_resum
+    f_ex_g_1 = f_ex_g
+    f_ex_resum_1 = f_ex_resum
+    fpbh_ex_g_1 = fpbh_ex_g
+    fpbh_ex_resum_1 = fpbh_ex_resum
+    
+elif Wf == 'Wthtf' and L == 233.758:
+    g0_2 = g0
+    xi3_2 = xi3E
+    var_2 = var
+    xi3small_2 = xi3
+    varsmall_2 = varsmall
+    skew_2 = skew
+    L2 = L
+    Mpeak_mono_g_2 = MH[np.argmax(f_mono_g)]
+    Mpeak_mono_resum_2 = MH[np.argmax(f_mono_resum)]
+
+    beta_mono_g_2 = beta_mono_g
+    beta_mono_resum_2 = beta_mono_resum
+    f_mono_g_2 = f_mono_g
+    f_mono_resum_2 = f_mono_resum
+    fpbh_mono_g_2 = fpbh_mono_g
+    fpbh_mono_resum_2 = fpbh_mono_resum
+
+    beta_ex_g_2 = beta_ex_g
+    beta_ex_resum_2 = beta_ex_resum
+    f_ex_g_2 = f_ex_g
+    f_ex_resum_2 = f_ex_resum
+    fpbh_ex_g_2 = fpbh_ex_g
+    fpbh_ex_resum_2 = fpbh_ex_resum
+
+elif Wf == 'Wg4' and  L == 226.206:
+    g0_3 = g0
+    xi3_3 = xi3E
+    var_3 = var
+    xi3small_3 = xi3
+    varsmall_3 = varsmall
+    skew_3 = skew
+    L3 = L
+    Mpeak_mono_g_3 = MH[np.argmax(f_mono_g)]
+    Mpeak_mono_resum_3 = MH[np.argmax(f_mono_resum)]
+
+    beta_mono_g_3 = beta_mono_g
+    beta_mono_resum_3 = beta_mono_resum
+    f_mono_g_3 = f_mono_g
+    f_mono_resum_3 = f_mono_resum
+    fpbh_mono_g_3 = fpbh_mono_g
+    fpbh_mono_resum_3 = fpbh_mono_resum
+
+    beta_ex_g_3 = beta_ex_g
+    beta_ex_resum_3 = beta_ex_resum
+    f_ex_g_3 = f_ex_g
+    f_ex_resum_3 = f_ex_resum
+    fpbh_ex_g_3 = fpbh_ex_g
+    fpbh_ex_resum_3 = fpbh_ex_resum
+
+elif Wf == 'Wg4' and L == 226.518:
+    g0_4 = g0
+    xi3_4 = xi3E
+    var_4 = var
+    xi3small_4 = xi3
+    varsmall_4 = varsmall
+    skew_4 = skew
+    L4 = L
+    Mpeak_mono_g_4 = MH[np.argmax(f_mono_g)]
+    Mpeak_mono_resum_4 = MH[np.argmax(f_mono_resum)]
+
+    beta_mono_g_4 = beta_mono_g
+    beta_mono_resum_4 = beta_mono_resum
+    f_mono_g_4 = f_mono_g
+    f_mono_resum_4 = f_mono_resum
+    fpbh_mono_g_4 = fpbh_mono_g
+    fpbh_mono_resum_4 = fpbh_mono_resum
+
+    beta_ex_g_4 = beta_ex_g
+    beta_ex_resum_4 = beta_ex_resum
+    f_ex_g_4 = f_ex_g
+    f_ex_resum_4 = f_ex_resum
+    fpbh_ex_g_4 = fpbh_ex_g
+    fpbh_ex_resum_4 = fpbh_ex_resum
+
+
+print(f'L = {L}')
+print(f'gcrit = {gcrit:.2e}, wf = {Wf}, deltac = {deltac}')
+print(' ')
+print(f'fpbh g mono: {fpbh_mono_g:.4}, fpbh ng mono: {fpbh_mono_resum:.4}')
+print(f'fpeak g mono: {fpeak_mono_g:.4}, fpeak ng mono: {fpeak_mono_resum:.4}')
+print(' ')
+print(f'fpbh g ex: {fpbh_ex_g:.4}, fpbh ng ex: {fpbh_ex_resum:.4}')
+print(f'fpeak g ex: {fpeak_ex_g:.4}, fpeak ng ex: {fpeak_ex_resum:.4}')
+print(' ')
+print(f'Mpeak g mono: {MH[np.argmax(f_mono_g)]:.4}, Mpeak ng mono: {MH[np.argmax(f_mono_resum)]:.4}')
+print(f'Mpeak g ex: {MH[np.argmax(f_ex_g)]:.4}, Mpeak ng ex: {MH[np.argmax(f_ex_resum)]:.4}')
 sys.exit()
+
+print(f'Mpeak_mono_g_1: {Mpeak_mono_g_1:.2e},\nMpeak_mono_g_2: {Mpeak_mono_g_2:.2e},\nMpeak_mono_g_3: {Mpeak_mono_g_3:.2e},\nMpeak_mono_g_4: {Mpeak_mono_g_4:.2e}')
+print(f'Mpeak_mono_resum_1: {Mpeak_mono_resum_1:.2e},\nMpeak_mono_resum_2: {Mpeak_mono_resum_2:.2e},\nMpeak_mono_resum_3: {Mpeak_mono_resum_3:.2e},\nMpeak_mono_resum_4: {Mpeak_mono_resum_4:.2e}')
 
 # abuncance constraint, valid for 1e-16 to 1e-13 solar masses
 Mbeta1 = np.argmin(np.abs(MH-1e-16))
@@ -752,7 +957,7 @@ formatter = FuncFormatter(format_ticks1)
 plt.gca().yaxis.set_major_formatter(formatter)
 
 plt.legend()
-plt.title('Smoothed Connected 3-Point Function')
+plt.title('Smoothed 3-Point Connected Function')
 # plt.savefig(f'xi3_vs_{kikf}.pdf')
 plt.show()
 
@@ -767,25 +972,6 @@ def format_ticks2(y, pos):
     else:
         return f'{y:.1e}'
 
-# plt.plot(MH[1900:2766], (xi3_Wthtf[1900:2766])/var_Wthtf[1900:2766]**1.5)
-# plt.plot(MH[1900:2766], (xi3_Wthtf[1900:2766])/var_Wthtf[1900:2766]**1.5, 'orange',label='Wthtf')
-# plt.plot(MH[1900:2766], (xi3_Wg4[1900:2766])/var_Wg4[1900:2766]**1.5, 'b--', label='Wg4')
-
-plt.plot(MH[2000:2666], (xi3_Wthtf[2000:2666])/var_Wthtf[2000:2666]**1.5, 'orange',label='Wthtf')
-plt.plot(MH[2000:2666], (xi3_Wg4[2000:2666])/var_Wg4[2000:2666]**1.5, 'b--', label='Wg4')
-plt.xscale('log')
-plt.yscale('symlog')
-plt.axhline(y=0, color='gray', linewidth=0.5)
-plt.ylabel(r'$\kappa_3/g_{eff}$')
-plt.xlabel(r'$M_H/M_\odot$')
-plt.title(f'Skewness')
-# plt.xlim(5.6e-16, 2.8e-6)
-plt.yticks(list(plt.yticks()[0]) + [0])
-formatter = FuncFormatter(format_ticks2)
-plt.gca().yaxis.set_major_formatter(formatter)
-plt.legend( )
-# plt.savefig(f'skewness_vs_{kikf}.pdf')
-plt.show()
 
 #########################################
 
@@ -798,25 +984,11 @@ plt.xscale('log')
 plt.yscale('log')
 plt.xlabel(r'$M_H\,/\,M_\odot$')
 plt.legend()
-plt.title(r'Monochromatic $\beta(MH)$' f', g={nn}g$_c$, {Wf}')
+plt.title(r'Monochromatic $\beta(MH)$' f', g={n}g$_c$, {Wf}')
 plt.ylim(1e-27, 1e6)
-# plt.savefig(f'beta_mono_vs_{nn}g_{kikf}.pdf')
+# plt.savefig(f'beta_mono_vs_{n}g_{kikf}.pdf')
 plt.show()
 
-
-plt.plot( MH, beta_mono_g_Wg4/fpbh_ex_g_Wg4, label='Gaussian, Wg4')
-plt.plot( MH, beta_mono_resum_Wg4/fpbh_ex_resum_Wg4, label='non-Gaussian, Wg4')
-plt.plot( MH, beta_mono_g_Wthtf/fpbh_ex_g_Wthtf, label='Gaussian, Wthtf')
-plt.plot( MH, beta_mono_resum_Wthtf/fpbh_ex_resum_Wthtf, label='non-Gaussian, Wthtf')
-plt.plot(Mbeta, beta_constraint, 'k--', label='outdated femtolensing constraints')
-plt.xscale('log')
-plt.yscale('log')
-plt.xlabel(r'$M_H\,/\,M_\odot$')
-plt.legend()
-plt.title(r'Monochromatic $\beta(MH)/f_{\rm PBH}$' f', g={nn}g$_c$, {Wf}')
-plt.ylim(1e-21, 1e-14)
-# plt.savefig(f'beta_mono_vs_{nn}g_fpbh_{kikf}.pdf')
-plt.show()
 
 
 # beta extended
@@ -828,40 +1000,14 @@ plt.xscale('log')
 plt.yscale('log')
 plt.xlabel(r'$M_H\,/\,M_\odot$')
 plt.legend()
-plt.title(r'Extended $\beta(MH)$' f', g={nn}g$_c$, {Wf}')
+plt.title(r'Extended $\beta(MH)$' f', g={n}g$_c$, {Wf}')
 plt.ylim(1e-27, 1e6)
-# plt.savefig(f'beta_ex_vs_{nn}g_{kikf}.pdf')
+# plt.savefig(f'beta_ex_vs_{n}g_{kikf}.pdf')
 plt.show()
 
-plt.plot( MH, beta_ex_g_Wg4/fpbh_ex_g_Wg4, color='#00BFFF', alpha=1, linestyle='-', label = r'$\beta_G$, Wg4')
-plt.plot( MH, beta_ex_resum_Wg4/fpbh_ex_resum_Wg4, '--', color='tab:orange', label = r'$\beta_{NG}$, Wg4')
-plt.plot( MH, beta_ex_g_Wthtf/fpbh_ex_g_Wthtf, ':', color='k', label=r'$\beta_G$, Wthtf')
-plt.plot( MH, beta_ex_resum_Wthtf/fpbh_ex_resum_Wthtf, color='#781aa5', linestyle=(0, (5, 2, 1, 2, 1, 2)) , label=r'$\beta_{NG}$, Wthtf')
-plt.xscale('log')
-plt.yscale('log')
-plt.xlabel(r'$M_H\,/\,M_\odot$')
-plt.legend()
-plt.title(r'Extended $\beta(MH)/f_{\rm PBH}$' f', g={nn}g$_c$, {Wf}')
-plt.ylim(1e-39, 1e-7)
-# plt.savefig(f'beta_ex_vs_{nn}g_fpbh_{kikf}.pdf')
-plt.show()
 
 
 #########################################
-
-# f mono
-plt.plot( MH, f_ex_g_Wg4 , color='#00BFFF', alpha=1, linestyle='-', label = r'$f_G$, Wg4')
-plt.plot( MH, f_ex_resum_Wg4 , '--', color='tab:orange', label = r'$f_{NG}$, Wg4')
-plt.plot( MH, f_ex_g_Wthtf , ':', color='k', label=r'$f_G$, Wthtf')
-plt.plot( MH, f_ex_resum_Wthtf , color='#781aa5', linestyle=(0, (5, 2, 1, 2, 1, 2)) , label=r'$f_{NG}$, Wthtf')
-plt.xscale('log')
-plt.yscale('log')
-plt.xlabel(r'$M_H\,/\,M_\odot$')
-plt.legend()
-plt.title(r'Monochromatic $f(MH)$' f', g={nn}g$_c$, {Wf}')
-plt.ylim(1e-17, 1e19)
-# plt.savefig(f'f_mono_vs_{nn}g_{kikf}.pdf')
-plt.show()
 
 
 # Define a custom formatter function
@@ -873,26 +1019,26 @@ def custom_formatter_y(x, pos):
 import matplotlib.ticker as ticker 
 # tab:orange color='#ff7f0e'
 # linestyle=(0, (5, 10))
-# celeste #00c3f3 ó #00bdeb ó #00BFFF
-plt.plot( MH, f_mono_g_Wg4/fpbh_mono_g_Wg4, color='#00BFFF', alpha=1, linestyle='-', label = r'$f_G$, Wg4')
-plt.plot( MH, f_mono_resum_Wg4/fpbh_mono_resum_Wg4, '--', color='tab:orange', label = r'$f_{NG}$, Wg4')
-plt.plot( MH, f_mono_g_Wthtf/fpbh_mono_g_Wthtf, ':', color='k', label=r'$f_G$, Wthtf')
-plt.plot( MH, f_mono_resum_Wthtf/fpbh_mono_resum_Wthtf, color='#781aa5', linestyle=(0, (5, 2, 1, 2, 1, 2)) , label=r'$f_{NG}$, Wthtf')
+# celeste #00c3f3 ó #00bdeb ó #00BFFF  #00ABEB
+
+plt.plot( MH, f_mono_g_Wg4, color='#00BFFF', alpha=1, linestyle='-', label = r'$f_G$, Wg4')
+plt.plot( MH, f_mono_resum_Wg4, '--', color='tab:orange', label = r'$f_{NG}$, Wg4')
+plt.plot( MH, f_mono_g_Wthtf, ':', color='k', label=r'$f_G$, Wthtf')
+plt.plot( MH, f_mono_resum_Wthtf, color='#8C2EB9', linestyle=(0, (5, 2, 1, 2, 1, 2)) , label=r'$f_{NG}$, Wthtf')
 plt.xscale('log')
 plt.yscale('log')
 plt.xlabel(r'$M_H\,/\,M_\odot$')
-plt.legend(loc='center right', bbox_to_anchor=(0.999, 0.81))
-plt.title(r'Monochromatic $f(MH)/f_{\rm PBH}$' f', g={nn}g$_c$')
+# plt.legend(loc='center right', bbox_to_anchor=(0.999, 0.81))
+plt.legend()
+plt.title(r'Monochromatic $f(MH)/f_{\rm PBH}$' f', g={n}g$_c$')
+# plt.axhline(y=1, color='r', linestyle='--', linewidth=0.92)
+# plt.yticks(list(plt.yticks()[0]) + [1])
 plt.ylim(1e-17, 1e1)
-plt.xlim(3e-14, 6e-9)
-plt.axhline(y=1, color='r', linestyle='--', linewidth=0.92)
-plt.yticks(list(plt.yticks()[0]) + [1])
-plt.ylim(1e-17, 1e1)
-plt.xlim(3e-14, 6e-9)
+plt.xlim(3e-18, 6e-9)
 # Use FuncFormatter with the custom formatter function
-ax = plt.gca()
-ax.yaxis.set_major_formatter(ticker.FuncFormatter(custom_formatter_y))
-# plt.savefig(f'f_mono_vs_{nn}g_fpbh_{kikf}.pdf')
+# ax = plt.gca()
+# ax.yaxis.set_major_formatter(ticker.FuncFormatter(custom_formatter_y))
+# plt.savefig(f'f_mono_vs_{n}g_fpbh_{kikf}.pdf')
 plt.show()
 
 
@@ -900,36 +1046,695 @@ plt.show()
 plt.plot( MH, f_ex_g_Wg4 , color='#00BFFF', alpha=1, linestyle='-', label = r'$f_G$, Wg4')
 plt.plot( MH, f_ex_resum_Wg4 , '--', color='tab:orange', label = r'$f_{NG}$, Wg4')
 plt.plot( MH, f_ex_g_Wthtf , ':', color='k', label=r'$f_G$, Wthtf')
-plt.plot( MH, f_ex_resum_Wthtf , color='#781aa5', linestyle=(0, (5, 2, 1, 2, 1, 2)) , label=r'$f_{NG}$, Wthtf')
+plt.plot( MH, f_ex_resum_Wthtf , color='#8C2EB9', linestyle=(0, (5, 2, 1, 2, 1, 2)) , label=r'$f_{NG}$, Wthtf')
 plt.xscale('log')
 plt.yscale('log')
-plt.xlabel(r'$M_H\,/\,M_\odot$')
+plt.xlabel(r'$M_H\, [M_\odot]$')
 plt.legend()
-plt.title(r'Extended $f(MH)$' f', g={nn}g$_c$, {Wf}')
-plt.ylim(1e-17, 1e19)
-# plt.savefig(f'f_ex_vs_{nn}g_{kikf}.pdf')
+plt.title(r'Extended $f(MH)$' f', g={n}g$_c$, {Wf}')
+plt.ylim(1e-48, 1e2)
+plt.xlim(1e-18, 3e-9)
+# plt.savefig(f'f_ex_vs_{n}g_{kikf}.pdf')
 plt.show()
 
 
-plt.plot( MH, f_ex_g_Wg4/fpbh_ex_g_Wg4, color='#00BFFF', alpha=1, linestyle='-', label = r'$f_G$, Wg4')
-plt.plot( MH, f_ex_resum_Wg4/fpbh_ex_resum_Wg4, '--', color='tab:orange', label = r'$f_{NG}$, Wg4')
-plt.plot( MH, f_ex_g_Wthtf/fpbh_ex_g_Wthtf, ':', color='k', label=r'$f_G$, Wthtf')
-plt.plot( MH, f_ex_resum_Wthtf/fpbh_ex_resum_Wthtf, color='#781aa5', linestyle=(0, (5, 2, 1, 2, 1, 2)) , label=r'$\beta_{NG}$, Wthtf')
-plt.xscale('log')
-plt.yscale('log')
-plt.ylabel(r'$f(MH)/f_{\rm PBH}$')
-plt.xlabel(r'$M_H\,/\,M_\odot$')
-plt.legend(loc='center right', bbox_to_anchor=(0.999, 0.81))
-plt.title('Extended Mass function' f', g={nn}g$_c$')
-plt.ylim(1e-17, 1e1)
-plt.xlim(5e-17, 6e-8)
-plt.axhline(y=1, color='r', linestyle='--', linewidth=0.92)
-plt.yticks(list(plt.yticks()[0]) + [1])
-plt.ylim(1e-17, 1e1)
-# plt.xlim(3e-14, 6e-9)
-# Use FuncFormatter with the custom formatter function
-ax = plt.gca()
-ax.yaxis.set_major_formatter(ticker.FuncFormatter(custom_formatter_y))
-# plt.savefig(f'f_ex_vs_{nn}g_fpbh_{kikf}.pdf')
+
+
+# Transfer function plot
+def Wth(k,q):
+    a=3.*(np.sin(k/q)-k/q*np.cos(k/q))/(k/q)**3. 
+    return a
+def Wtf(k,q):
+    b=3.*(np.sin(csrad*k/q)-csrad*k/q*np.cos(csrad*k/q))/(csrad*k/q)**3. 
+    return b 
+def Wthtf(k,q):
+    a=3.*(np.sin(k/q)-k/q*np.cos(k/q))/(k/q)**3. 
+    b=3.*(np.sin(csrad*k/q)-csrad*k/q*np.cos(csrad*k/q))/(csrad*k/q)**3. 
+    return a*b 
+
+kRHsym = np.linspace(-40,40,1000)
+plt.plot(kRHsym, Wth(kRHsym,1), lw=0.98,label=r'$T(kR_H)$', color='k')
+plt.plot(kRHsym, Wtf(kRHsym,1), label=r'$T(c_skR_H)$', color='tab:orange')
+plt.plot(kRHsym, Wthtf(kRHsym,1), '-.',label=r'$T(kR_H)*T(c_skR_H)$', color='#00ABEB')
+plt.legend()
+plt.plot(kRHsym, Wth(kRHsym,1),lw=0.9, label=r'$T(kR_H)$', color='k')
+plt.title('Fourier Transform of Spherical Real-Space Top-hat')
+plt.xlabel(r'kR_H')
+# plt.axvline(1,lw=0.5,color='gray')
+plt.xlim(-37, 37)
+# plt.savefig('TF_sym.pdf')
 plt.show()
 
+kRHpositive = np.linspace(0,14,1000)
+# plt.fill_between(kRHpositive, Wthtf(kRHpositive, 1), where=(kRHpositive >= 1) & (kRHpositive <= 4.4934), color='#00ABEB', alpha=0.275, label='PBH forming scales')
+plt.plot(kRHpositive, Wth(kRHpositive,1),lw=0.99, label=r'$T(kR_H)$', color='k')
+plt.plot(kRHpositive, Wtf(kRHpositive,1),  label=r'$T(c_skR_H)$', color='tab:orange')
+plt.plot(kRHpositive, Wthtf(kRHpositive,1), '-.',label=r'$T(kR_H)*T(c_skR_H)$', color='#00ABEB')
+plt.legend()
+plt.plot(kRHpositive, Wth(kRHpositive,1),lw=0.9, label=r'$T(kR_H)$', color='k')
+plt.title('Fourier Transform of a Real-Space Spherical Top-hat Function ')
+# plt.title('Fourier Transform of a Spherical Top-hat Function in Real Space')
+plt.xlabel(r'$kR_H$')
+plt.axvline(1,lw=0.5,color='gray')
+plt.xticks(list(plt.xticks()[0]) + [1])
+plt.xlim(0, 14)
+# plt.savefig('TF_pos.pdf')
+plt.show()
+#############################################
+#
+
+# celeste color='#00BFFF' #00ABEB
+# morado color='#781aa5 ' #9133BE #8C2EB9 
+i0 = np.argmin(abs(MHofk(kpzmax)-MHsmall))
+
+extraytick = (g0_3*(xi3small_3))[i0]
+fig, ax1 = plt.subplots()
+ax1.plot(MHsmall, g0_3*(xi3small_3) , label=r'Wg4, $\lambda_0=226.206$', color='k')
+ax1.plot(MHsmall, g0_4*(xi3small_4) ,label=r'Wg4, $\lambda_0=226.518$', color='#00ABEB')
+ax1.plot(MHsmall, g0_1*(xi3small_1) ,'-.', label=r'Wthtf, $\lambda_0=233.548$', color='#004080')
+ax1.plot(MHsmall, g0_2*(xi3small_2) ,'-.', label=r'Wthtf, $\lambda_0=233.758$', color='tab:orange')
+ax1.legend(loc='lower left')
+ax1.set_ylabel(r'$\xi_3$')
+ax1.set_xlabel(r'$M_H \, [M_\odot]$')
+# plt.axhline(y=0, color='gray', linewidth=0.5)
+# ax1.axvline(MHofk(kpzmax), color='k', linestyle='--', linewidth=0.5)
+ax1.set_xscale('log')
+ax1.set_yscale('symlog')
+# ax1.set_legend()
+yticks = list(ax1.get_yticks())
+yticks.append(0)
+yticks.append(extraytick)
+ax1.set_yticks((yticks))
+ax1.set_title(f'Smoothed 3-point Connected Function')
+# Create a secondary x-axis
+secax = ax1.twiny()
+# Set the tick positions and labels for the secondary x-axis
+secax.set_xscale('log')
+secax.set_xlim(ax1.get_xlim())
+# major_ticks = np.geomspace(MHsmall[-1], MHsmall[0], 5)  # Adjust the number of major ticks as needed
+major_ticks = [MHofk(k) for k in [1e15, 1e14, 1e13, 1e12]]
+# Use the conversion function to set the secondary x-axis tick labels
+secax.set_xticks(major_ticks)
+secax.set_xticklabels([format_func(tick, i) for i, tick in enumerate(major_ticks)])
+secax.set_xlabel(r'k [Mpc$^{-1}$]')
+formatter = FuncFormatter(format_ticks1)
+plt.gca().yaxis.set_major_formatter(formatter)
+plt.tight_layout()
+# plt.savefig('xi3_vs_lambda0.pdf')
+ax1.axvline(MHofk(kpzmax), color='k', linestyle='--', linewidth=0.5)
+plt.show()
+
+
+
+
+# extraytick = [np.min(g0_3*(xi3small_3)/varsmall_3**1.5)]
+# extraytick = [np.min(g0_1*(xi3small_1)/varsmall_1**1.5), np.min(g0_3*(xi3small_3)/varsmall_3**1.5)]
+
+extraytick = [(g0_1*(xi3small_1)/varsmall_1**1.5)[i0], (g0_3*(xi3small_3)/varsmall_3**1.5)[i0]]
+fig, ax1 = plt.subplots()
+ax1.plot(MHsmall, g0_3*(xi3small_3)/varsmall_3**1.5,'-.', lw='1.1', label=r'Wg4, $\lambda_0=226.206$', color='k')
+ax1.plot(MHsmall, g0_4*(xi3small_4)/varsmall_4**1.5,'-.',lw='1.1',  label=r'Wg4, $\lambda_0=226.518$', color='#00ABEB')
+ax1.plot(MHsmall, g0_1*(xi3small_1)/varsmall_1**1.5,lw='0.98', label=r'Wthtf, $\lambda_0=233.548$', color='#004080')
+ax1.plot(MHsmall, g0_2*(xi3small_2)/varsmall_2**1.5,lw='0.98',label=r'Wthtf, $\lambda_0=233.758$', color='tab:orange')
+ax1.legend(loc='upper left')
+ax1.set_ylabel(r'$\xi_3/\sigma^3$')
+ax1.set_xlabel(r'$M_H \, [M_\odot]$')
+# ax1.axhline(y=0, color='k', linestyle='--')
+plt.axhline(y=0, color='gray', linewidth=0.5)
+ax1.set_xscale('log')
+ax1.set_yscale('symlog')
+# ax1.set_legend()
+yticks = list(ax1.get_yticks())
+yticks.append(0)
+# yticks.append(extraytick)
+yticks = yticks+extraytick
+ax1.set_yticks(yticks)
+ax1.set_title(f'Skewness')
+# Create a secondary x-axis
+secax = ax1.twiny()
+# Set the tick positions and labels for the secondary x-axis
+secax.set_xscale('log')
+secax.set_xlim(ax1.get_xlim())
+# major_ticks = np.geomspace(MHsmall[-1], MHsmall[0], 5)  # Adjust the number of major ticks as needed
+major_ticks = [MHofk(k) for k in [1e15, 1e14, 1e13, 1e12]]
+# Use the conversion function to set the secondary x-axis tick labels
+secax.set_xticks(major_ticks)
+secax.set_xticklabels([format_func(tick, i) for i, tick in enumerate(major_ticks)])
+secax.set_xlabel(r'k [Mpc$^{-1}$]')
+formatter = FuncFormatter(format_ticks1)
+plt.gca().yaxis.set_major_formatter(formatter)
+plt.tight_layout()
+# plt.savefig('skewness_vs_lambda0.pdf')
+plt.axvline(MHofk(kpzmax), color='k', linestyle='--', linewidth=0.5)
+plt.show()
+
+
+
+# extraytick = np.min((xi3small_4))
+# fig, ax1 = plt.subplots()
+# ax1.plot(MHsmall, (xi3small_3) , label=r'Wg4, $\lambda_0=226.206$', color='k')
+# ax1.plot(MHsmall, (xi3small_4) ,label=r'Wg4, $\lambda_0=226.518$', color='#00ABEB')
+# ax1.plot(MHsmall, (xi3small_1) ,'-.', label=r'Wthtf, $\lambda_0=233.548$', color='#003366')
+# ax1.plot(MHsmall, (xi3small_2) ,'-.', label=r'Wthtf, $\lambda_0=233.758$', color='tab:orange')
+# ax1.legend(loc='lower left')
+# ax1.set_ylabel(r'$\xi_3$')
+# ax1.set_xlabel(r'$M_H \, [M_\odot]$')
+# # plt.axhline(y=0, color='gray', linewidth=0.5)
+# # ax1.axvline(MHofk(kpzmax), color='k', linestyle='--', linewidth=0.5)
+# ax1.set_xscale('log')
+# ax1.set_yscale('symlog')
+# # ax1.set_legend()
+# yticks = list(ax1.get_yticks())
+# yticks.append(0)
+# # yticks.append(extraytick)
+# ax1.set_yticks(yticks)
+# ax1.set_title(f'Smoothed 3-point Connected Function')
+# # Create a secondary x-axis
+# secax = ax1.twiny()
+# # Set the tick positions and labels for the secondary x-axis
+# secax.set_xscale('log')
+# secax.set_xlim(ax1.get_xlim())
+# # major_ticks = np.geomspace(MHsmall[-1], MHsmall[0], 5)  # Adjust the number of major ticks as needed
+# major_ticks = [MHofk(k) for k in [1e15, 1e14, 1e13, 1e12]]
+# # Use the conversion function to set the secondary x-axis tick labels
+# secax.set_xticks(major_ticks)
+# secax.set_xticklabels([format_func(tick, i) for i, tick in enumerate(major_ticks)])
+# secax.set_xlabel(r'k [Mpc$^{-1}$]')
+# formatter = FuncFormatter(format_ticks1)
+# plt.gca().yaxis.set_major_formatter(formatter)
+# plt.tight_layout()
+# # plt.savefig('xi3_vs_lambda0.pdf')
+# plt.show()
+
+
+
+# extraytick = np.min((xi3small_4)/varsmall_4**1.5)
+# fig, ax1 = plt.subplots()
+# ax1.plot(MHsmall, (xi3small_3)/varsmall_3**1.5, label=r'Wg4, $\lambda_0=226.206$', color='k')
+# ax1.plot(MHsmall, (xi3small_4)/varsmall_4**1.5, label=r'Wg4, $\lambda_0=226.518$', color='#00ABEB')
+# ax1.plot(MHsmall, (xi3small_1)/varsmall_1**1.5,'-.', label=r'Wthtf, $\lambda_0=233.548$', color='#003366')
+# ax1.plot(MHsmall, (xi3small_2)/varsmall_2**1.5,'-.', label=r'Wthtf, $\lambda_0=233.758$', color='tab:orange')
+# ax1.legend(loc='upper left')
+# ax1.set_ylabel(r'$\xi_3/\sigma^3$')
+# ax1.set_xlabel(r'$M_H \, [M_\odot]$')
+# # ax1.axhline(y=0, color='k', linestyle='--')
+# plt.axhline(y=0, color='gray', linewidth=0.5)
+# ax1.set_xscale('log')
+# ax1.set_yscale('symlog')
+# # ax1.set_legend()
+# yticks = list(ax1.get_yticks())
+# yticks.append(0)
+# yticks.append(extraytick)
+# # plt.axhline(y=extraytick, color='gray', linewidth=0.5)
+# ax1.set_yticks(yticks)
+# ax1.set_title(f'Skewness')
+# # Create a secondary x-axis
+# secax = ax1.twiny()
+# # Set the tick positions and labels for the secondary x-axis
+# secax.set_xscale('log')
+# secax.set_xlim(ax1.get_xlim())
+# # major_ticks = np.geomspace(MHsmall[-1], MHsmall[0], 5)  # Adjust the number of major ticks as needed
+# major_ticks = [MHofk(k) for k in [1e15, 1e14, 1e13, 1e12]]
+# # Use the conversion function to set the secondary x-axis tick labels
+# secax.set_xticks(major_ticks)
+# secax.set_xticklabels([format_func(tick, i) for i, tick in enumerate(major_ticks)])
+# secax.set_xlabel(r'k [Mpc$^{-1}$]')
+# formatter = FuncFormatter(format_ticks1)
+# plt.gca().yaxis.set_major_formatter(formatter)
+# plt.tight_layout()
+# # plt.savefig('skewness_vs_lambda0.pdf')
+# plt.show()
+
+
+###################################
+########## plos ng final ##########
+###################################
+# beta_ex_resum_4
+# fig, ax1 = plt.subplots()
+# # ax1.plot(MH, wth_fmono, '--', color='tab:blue', label=r'Wth, $\lambda_0=228.210$')
+# ax1.plot(MH, f_mono_g_1, color='tab:orange', label=r'Wthtf, $\lambda_0=233.548$')
+# ax1.plot(MH, f_mono_g_2, '--', color='k', label=r'Wthtf, $\lambda_0=233.758$')
+# ax1.plot(MH, f_mono_g_3, '-.',color='k', linewidth=1,label=r'Wg4, $\lambda_0=226.206$')
+# ax1.plot(MH, f_mono_g_4, '-.',color='#00ABEB', linewidth=1,label=r'Wg4, $\lambda_0=226.518$')
+# ax1.set_title(f'Monochromatic PBH Mass Function, Gaussian Statistics', pad=8)#, fontsize=16)
+# ax1.set_xlabel(r'$M\, [M_\odot]$')
+# ax1.set_ylabel(r'$f(M)$')
+# # plt.axhline(y=1, color='r', linestyle='--')
+# ax1.set_ylim(1e-48, 1e2)
+# ax1.set_xlim(1e-17, 1e1)
+# ax1.legend(loc='lower right')
+# ax1.set_xscale('log')
+# ax1.set_yscale('log')
+# # ax1.set_legend()
+# # yticks = list(ax1.get_yticks())
+# # yticks.append(0)
+# # ax1.set_yticks(yticks)
+# # Create a secondary x-axis
+# secax = ax1.twiny()
+# # Set the tick positions and labels for the secondary x-axis
+# secax.set_xscale('log')
+# secax.set_xlim(ax1.get_xlim())
+# major_ticks = np.geomspace(MH[-1], MH[0], 10)  # Adjust the number of major ticks as needed
+# # Use the conversion function to set the secondary x-axis tick labels
+# secax.set_xticks(major_ticks)
+# secax.set_xticklabels([format_func(tick, i) for i, tick in enumerate(major_ticks)])
+# secax.set_xlabel(r'k [Mpc$^{-1}$]')
+# # formatter = FuncFormatter(format_ticks1)
+# # plt.gca().yaxis.set_major_formatter(formatter)
+# ax1.set_ylim(1e-48, 1e2)
+# ax1.set_xlim(1e-17, 1e1)
+# plt.tight_layout()
+# # plt.savefig('fmono.pdf')
+# plt.show()
+
+
+
+# ARREGLAR TICKS!!!!!!!!!
+fig, ax1 = plt.subplots()
+# ax1.plot(MH, f_ex_resum_2, color='k',label=r'Wthtf, $\lambda_0=233.758$')
+# ax1.plot(MH, f_ex_g_2,color='tab:orange',  label=r'Wthtf, $\lambda_0=233.758$')
+ax1.plot(MH, f_mono_g_1,'-.',color='k',  label=r'Wthtf, $f_{\rm \, PBH, ex}^{\,G}=$'f'{fpbh_mono_g_1:.3}'[:-1])
+ax1.plot(MH, f_mono_resum_1, color='tab:orange',label=r'Wthtf, $f_{\rm PBH, ex}^{\,NG}=$'f'{fpbh_mono_resum_1:.3}'[:-1])
+ax1.set_title(f'Monochromatic PBH Mass Function, non-Gaussian Statistics', pad=8)#, fontsize=16)
+ax1.set_xlabel(r'$M\, [M_\odot]$')
+ax1.set_ylabel(r'$f(M)$')
+# plt.axhline(y=1, color='r', linestyle='--')
+ax1.legend(loc='lower left')
+ax1.set_xscale('log')
+ax1.set_yscale('log')
+# ax1.set_legend()
+# yticks = list(ax1.get_yticks())
+# yticks.append(0)
+# ax1.set_yticks(yticks)
+# Create a secondary x-axis
+ax1.set_ylim(1e-14, 1e1)
+ax1.set_xlim(8e-15, 2e-11)
+secax = ax1.twiny()
+# Set the tick positions and labels for the secondary x-axis
+secax.set_xscale('log')
+xlims = ax1.get_xlim()
+secax.set_xlim(xlims)
+# major_ticks = np.geomspace(MHofk(1e13), MHofk(1e12), 2)  # Adjust the number of major ticks as needed
+# major_ticks = [MHofk(k) for k in [1e13, 1e12]]
+major_ticks = np.geomspace(MH[-1], MH[0], 10)
+# Use the conversion function to set the secondary x-axis tick labels
+secax.set_xticks(major_ticks)
+secax.set_xticklabels([format_func0(tick, i) for i, tick in enumerate(major_ticks)])
+secax.set_xlabel(r'k [Mpc$^{-1}$]')
+secax.set_xlim(xlims)
+# formatter = FuncFormatter(format_ticks1)
+# plt.gca().yaxis.set_major_formatter(formatter)
+plt.tight_layout()
+# plt.savefig('fmono_ng_wthtf.pdf')
+plt.show()
+
+
+
+
+
+
+# ARREGLAR TICKS!!!!!!!!!
+fig, ax1 = plt.subplots()
+# ax1.plot(MH, f_ex_resum_2, color='k',label=r'Wthtf, $\lambda_0=233.758$')
+# ax1.plot(MH, f_ex_g_2,color='tab:orange',  label=r'Wthtf, $\lambda_0=233.758$')
+ax1.plot(MH, f_ex_g_2,'-.',color='k',  label=r'Wthtf, $f_{\rm \, PBH, ex}^{\,G}=$'f'{fpbh_ex_g_2:.3}'[:-1])
+ax1.plot(MH, f_ex_resum_2, color='tab:orange',label=r'Wthtf, $f_{\rm PBH, ex}^{\,NG}=$'f'{fpbh_ex_resum_2:.3}'[:-1])
+ax1.set_title(f'Extended PBH Mass Function, non-Gaussian Statistics', pad=8)#, fontsize=16)
+ax1.set_xlabel(r'$M\, [M_\odot]$')
+ax1.set_ylabel(r'$f(M)$')
+# plt.axhline(y=1, color='r', linestyle='--')
+ax1.legend(loc='lower left')
+ax1.set_xscale('log')
+ax1.set_yscale('log')
+# ax1.set_legend()
+# yticks = list(ax1.get_yticks())
+# yticks.append(0)
+# ax1.set_yticks(yticks)
+# Create a secondary x-axis
+ax1.set_ylim(1e-14, 1e1)
+ax1.set_xlim(8e-15, 2e-11)
+secax = ax1.twiny()
+# Set the tick positions and labels for the secondary x-axis
+secax.set_xscale('log')
+xlims = ax1.get_xlim()
+secax.set_xlim(xlims)
+# major_ticks = np.geomspace(MHofk(1e13), MHofk(1e12), 2)  # Adjust the number of major ticks as needed
+# major_ticks = [MHofk(k) for k in [1e13, 1e12]]
+major_ticks = np.geomspace(MH[-1], MH[0], 10)
+# Use the conversion function to set the secondary x-axis tick labels
+secax.set_xticks(major_ticks)
+secax.set_xticklabels([format_func0(tick, i) for i, tick in enumerate(major_ticks)])
+secax.set_xlabel(r'k [Mpc$^{-1}$]')
+secax.set_xlim(xlims)
+# formatter = FuncFormatter(format_ticks1)
+# plt.gca().yaxis.set_major_formatter(formatter)
+plt.tight_layout()
+# plt.savefig('fex_ng_wthtf.pdf')
+plt.show()
+
+
+
+# ARREGLAR TICKS!!!!!!!!!
+fig, ax1 = plt.subplots()
+# ax1.plot(MH, f_ex_resum_2, color='k',label=r'Wthtf, $\lambda_0=233.758$')
+# ax1.plot(MH, f_ex_g_2,color='tab:orange',  label=r'Wthtf, $\lambda_0=233.758$')
+ax1.plot(MH, f_mono_g_3,'-.',color='k',  label=r'Wg4, $f_{\rm \, PBH, ex}^{\,G}=$'f'{fpbh_mono_g_3:.3}'[:-1])
+ax1.plot(MH, f_mono_resum_3, color='tab:orange',label=r'Wg4, $f_{\rm PBH, ex}^{\,NG}=$'f'{fpbh_mono_resum_3:.3}'[:-1])
+ax1.set_title(f'Monochromatic PBH Mass Function, non-Gaussian Statistics', pad=8)#, fontsize=16)
+ax1.set_xlabel(r'$M\, [M_\odot]$')
+ax1.set_ylabel(r'$f(M)$')
+# plt.axhline(y=1, color='r', linestyle='--')
+ax1.legend(loc='lower left')
+ax1.set_xscale('log')
+ax1.set_yscale('log')
+# ax1.set_legend()
+# yticks = list(ax1.get_yticks())
+# yticks.append(0)
+# ax1.set_yticks(yticks)
+# Create a secondary x-axis
+ax1.set_ylim(1e-14, 1e1)
+ax1.set_xlim(8e-15, 2e-11)
+secax = ax1.twiny()
+# Set the tick positions and labels for the secondary x-axis
+secax.set_xscale('log')
+xlims = ax1.get_xlim()
+secax.set_xlim(xlims)
+# major_ticks = np.geomspace(MHofk(1e13), MHofk(1e12), 2)  # Adjust the number of major ticks as needed
+# major_ticks = [MHofk(k) for k in [1e13, 1e12]]
+major_ticks = np.geomspace(MH[-1], MH[0], 10)
+# Use the conversion function to set the secondary x-axis tick labels
+secax.set_xticks(major_ticks)
+secax.set_xticklabels([format_func0(tick, i) for i, tick in enumerate(major_ticks)])
+secax.set_xlabel(r'k [Mpc$^{-1}$]')
+secax.set_xlim(xlims)
+# formatter = FuncFormatter(format_ticks1)
+# plt.gca().yaxis.set_major_formatter(formatter)
+plt.tight_layout()
+# plt.savefig('fex_ng_wg4.pdf')
+plt.show()
+
+
+
+
+# ARREGLAR TICKS!!!!!!!!!
+fig, ax1 = plt.subplots()
+# ax1.plot(MH, f_ex_resum_2, color='k',label=r'Wthtf, $\lambda_0=233.758$')
+# ax1.plot(MH, f_ex_g_2,color='tab:orange',  label=r'Wthtf, $\lambda_0=233.758$')
+ax1.plot(MH, f_ex_g_4,'-.',color='k',  label=r'Wg4, $f_{\rm \, PBH, ex}^{\,G}=$'f'{fpbh_ex_g_4:.3}'[:-1])
+ax1.plot(MH, f_ex_resum_4, color='tab:orange',label=r'Wg4, $f_{\rm PBH, ex}^{\,NG}=$'f'{fpbh_ex_resum_4:.3}'[:-1])
+ax1.set_title(f'Extended PBH Mass Function, non-Gaussian Statistics', pad=8)#, fontsize=16)
+ax1.set_xlabel(r'$M\, [M_\odot]$')
+ax1.set_ylabel(r'$f(M)$')
+# plt.axhline(y=1, color='r', linestyle='--')
+ax1.legend(loc='lower left')
+ax1.set_xscale('log')
+ax1.set_yscale('log')
+# ax1.set_legend()
+# yticks = list(ax1.get_yticks())
+# yticks.append(0)
+# ax1.set_yticks(yticks)
+# Create a secondary x-axis
+ax1.set_ylim(1e-14, 1e1)
+ax1.set_xlim(8e-15, 2e-11)
+secax = ax1.twiny()
+# Set the tick positions and labels for the secondary x-axis
+secax.set_xscale('log')
+xlims = ax1.get_xlim()
+secax.set_xlim(xlims)
+# major_ticks = np.geomspace(MHofk(1e13), MHofk(1e12), 2)  # Adjust the number of major ticks as needed
+# major_ticks = [MHofk(k) for k in [1e13, 1e12]]
+major_ticks = np.geomspace(MH[-1], MH[0], 10)
+# Use the conversion function to set the secondary x-axis tick labels
+secax.set_xticks(major_ticks)
+secax.set_xticklabels([format_func0(tick, i) for i, tick in enumerate(major_ticks)])
+secax.set_xlabel(r'k [Mpc$^{-1}$]')
+secax.set_xlim(xlims)
+# formatter = FuncFormatter(format_ticks1)
+# plt.gca().yaxis.set_major_formatter(formatter)
+plt.tight_layout()
+# plt.savefig('fex_ng_wg4.pdf')
+plt.show()
+
+
+
+
+
+# ARREGLAR TICKS!!!!!!!!!
+fig, ax1 = plt.subplots()
+# ax1.plot(MH, f_ex_resum_2, color='k',label=r'Wthtf, $\lambda_0=233.758$')
+# ax1.plot(MH, f_ex_g_2,color='tab:orange',  label=r'Wthtf, $\lambda_0=233.758$')
+ax1.plot(MH, beta_ex_g_4,'-.',color='k',  label=r'Wg4')
+ax1.plot(MH, beta_ex_resum_4, color='tab:orange',label=r'Wg4')
+ax1.set_title(f'Extended PBH Abundance, non-Gaussian Statistics', pad=8)#, fontsize=16)
+ax1.set_xlabel(r'$M\, [M_\odot]$')
+ax1.set_ylabel(r'$\beta(M)$')
+# plt.axhline(y=1, color='r', linestyle='--')
+ax1.legend(loc='lower left')
+ax1.set_xscale('log')
+ax1.set_yscale('log')
+# ax1.set_legend()
+# yticks = list(ax1.get_yticks())
+# yticks.append(0)
+# ax1.set_yticks(yticks)
+# Create a secondary x-axis
+ax1.set_ylim(1e-28, 1e-14)
+ax1.set_xlim(8e-15, 2e-11)
+secax = ax1.twiny()
+# Set the tick positions and labels for the secondary x-axis
+secax.set_xscale('log')
+xlims = ax1.get_xlim()
+secax.set_xlim(xlims)
+# major_ticks = np.geomspace(MHofk(1e13), MHofk(1e12), 2)  # Adjust the number of major ticks as needed
+# major_ticks = [MHofk(k) for k in [1e13, 1e12]]
+major_ticks = np.geomspace(MH[-1], MH[0], 10)
+# Use the conversion function to set the secondary x-axis tick labels
+secax.set_xticks(major_ticks)
+secax.set_xticklabels([format_func0(tick, i) for i, tick in enumerate(major_ticks)])
+secax.set_xlabel(r'k [Mpc$^{-1}$]')
+secax.set_xlim(xlims)
+# formatter = FuncFormatter(format_ticks1)
+# plt.gca().yaxis.set_major_formatter(formatter)
+plt.tight_layout()
+# plt.savefig('betaex_ng_wg4.pdf')
+plt.show()
+
+
+
+
+fig, ax1 = plt.subplots()
+ax1.plot(MH, f_ex_g_2,'-.',color='k',  label=r'Wthtf, $f_{\rm \, PBH, ex}^{\,G}=$'f'{fpbh_ex_g_2:.3}'[:-1])
+ax1.plot(MH, f_ex_resum_2, color='#00ABEB',label=r'Wthtf, $f_{\rm PBH, ex}^{\,NG}=$'f'{fpbh_ex_resum_2:.3}'[:-1])
+ax1.plot(MH, f_ex_g_4,'-.',color='#8C2EB9',  label=r'Wg4, $f_{\rm \, PBH, ex}^{\,G}=$'f'{fpbh_ex_g_4:.3}'[:-1])
+ax1.plot(MH, f_ex_resum_4, color='tab:orange',label=r'Wg4, $f_{\rm PBH, ex}^{\,NG}=$'f'{fpbh_ex_resum_4:.3}'[:-1])
+ax1.set_title(f'Extended PBH Mass Function Comparison', pad=8)#, fontsize=16)
+ax1.set_xlabel(r'$M\, [M_\odot]$')
+ax1.set_ylabel(r'$f(M)$')
+# plt.axhline(y=1, color='r', linestyle='--')
+ax1.legend(loc='lower left', bbox_to_anchor=(0.1, 0))
+ax1.set_xscale('log')
+ax1.set_yscale('log')
+# ax1.set_legend()
+# yticks = list(ax1.get_yticks())
+# yticks.append(0)
+# ax1.set_yticks(yticks)
+# Create a secondary x-axis
+ax1.set_ylim(1e-14, 1e1)
+ax1.set_xlim(2e-15, 3e-11)
+secax = ax1.twiny()
+# Set the tick positions and labels for the secondary x-axis
+secax.set_xscale('log')
+xlims = ax1.get_xlim()
+secax.set_xlim(xlims)
+# major_ticks = np.geomspace(MHofk(1e13), MHofk(1e12), 2)  # Adjust the number of major ticks as needed
+# major_ticks = [MHofk(k) for k in [1e13, 1e12]]
+# major_ticks = np.geomspace(MH[-1], MH[0], 10)
+major_ticks = [MHofk(1e14),MHofk(1e13),MHofk(1e12)]
+# Use the conversion function to set the secondary x-axis tick labels
+secax.set_xticks(major_ticks)
+secax.set_xticklabels([format_func(tick, i) for i, tick in enumerate(major_ticks)])
+secax.set_xlabel(r'k [Mpc$^{-1}$]')
+secax.set_xlim(xlims)
+# formatter = FuncFormatter(format_ticks1)
+# plt.gca().yaxis.set_major_formatter(formatter)
+plt.tight_layout()
+# plt.savefig('fex_ng_bothW.pdf')
+plt.show()
+
+
+
+from mpl_toolkits.axes_grid1.inset_locator import inset_axes
+# ARREGLAR TICKS!!!!!!!!!
+fig, ax1 = plt.subplots()
+ax1.plot(MH, f_mono_g_1,'-.',color='k',  label=r'Wthtf, $f_{\rm \, PBH, mc}^{\,G}=$'f'{fpbh_mono_g_1:.3}'[:-1])
+ax1.plot(MH, f_mono_resum_1, color='#00ABEB',label=r'Wthtf, $f_{\rm PBH, mc}^{\,NG}=$'f'{fpbh_mono_resum_1:.3}'[:-1])
+ax1.plot(MH, f_mono_g_3,'-.',color='#8C2EB9',  label=r'Wg4, $f_{\rm \, PBH, mc}^{\,G}=$'f'{fpbh_mono_g_3:.3}'[:-1])
+ax1.plot(MH, f_mono_resum_3, color='tab:orange',label=r'Wg4, $f_{\rm PBH, mc}^{\,NG}=$'f'{fpbh_mono_resum_3:.3}'[:-1])
+ax1.set_title(f'Monochromatic PBH Mass Function Comparison', pad=8)#, fontsize=16)
+ax1.set_xlabel(r'$M\, [M_\odot]$')
+ax1.set_ylabel(r'$f(M)$')
+# plt.axhline(y=1, color='r', linestyle='--')
+ax1.legend(loc='lower left')#, bbox_to_anchor=(0.12, 0))
+ax1.set_xscale('log')
+ax1.set_yscale('log')
+# ax1.set_legend()
+# yticks = list(ax1.get_yticks())
+# yticks.append(0)
+# ax1.set_yticks(yticks)
+# Create a secondary x-axis
+ax1.set_ylim(1e-14, 1e1)
+ax1.set_xlim(2e-15, 3e-11)
+secax = ax1.twiny()
+# Set the tick positions and labels for the secondary x-axis
+secax.set_xscale('log')
+xlims = ax1.get_xlim()
+secax.set_xlim(xlims)
+# major_ticks = np.geomspace(MHofk(1e13), MHofk(1e12), 2)  # Adjust the number of major ticks as needed
+# major_ticks = [MHofk(k) for k in [1e13, 1e12]]
+# major_ticks = np.geomspace(MH[-1], MH[0], 10)
+major_ticks = [MHofk(1e14),MHofk(1e13),MHofk(1e12)]  # Adjust the number of major ticks as needed
+# Use the conversion function to set the secondary x-axis tick labels
+secax.set_xticks(major_ticks)
+secax.set_xticklabels([format_func(tick, i) for i, tick in enumerate(major_ticks)])
+secax.set_xlabel(r'k [Mpc$^{-1}$]')
+secax.set_xlim(xlims)
+# formatter = FuncFormatter(format_ticks1)
+# plt.gca().yaxis.set_major_formatter(formatter)
+plt.tight_layout()
+# inset_ax = inset_axes(ax1, width="30%", height="30%", loc='upper left')
+# inset_ax.loglog(MH, f_mono_g_2,'-.',color='k')
+# inset_ax.loglog(MH, f_mono_resum_2, color='#00ABEB')
+# inset_ax.loglog(MH, f_mono_resum_4, color='tab:orange')
+# inset_ax.loglog(MH, f_mono_g_4,'-.',color='#8C2EB9')
+# # inset_ax.set_title('Inset')
+# inset_ax.set_ylim(1e-2, 1e1)
+# inset_ax.set_xlim(4.5e-13, 2.7e-12)
+# inset_ax.set_xticks([])
+# inset_ax.set_yticks([])
+# plt.savefig('fmono_ng_bothW.pdf')
+plt.show()
+
+
+
+
+fig, ax1 = plt.subplots()
+ax1.plot(MH, beta_mono_g_1,'-.',color='k',  label=r'Wthtf, $f_{\rm \, PBH, mc}^{\,G}=$'f'{fpbh_mono_g_1:.3}'[:-1])
+ax1.plot(MH, beta_mono_resum_1, color='#00ABEB',label=r'Wthtf, $f_{\rm PBH, mc}^{\,NG}=$'f'{fpbh_mono_resum_1:.3}'[:-1])
+ax1.plot(MH, beta_mono_g_3,'-.',color='#8C2EB9',  label=r'Wg4, $f_{\rm \, PBH, mc}^{\,G}=$'f'{fpbh_mono_g_3:.3}'[:-1])
+ax1.plot(MH, beta_mono_resum_3, color='tab:orange',label=r'Wg4, $f_{\rm PBH, mc}^{\,NG}=$'f'{fpbh_mono_resum_3:.3}'[:-1])
+ax1.set_title(f'Monochromatic PBH Mass Function Comparison', pad=8)#, fontsize=16)
+ax1.set_xlabel(r'$M\, [M_\odot]$')
+ax1.set_ylabel(r'$f(M)$')
+# plt.axhline(y=1, color='r', linestyle='--')
+ax1.legend(loc='lower left')#, bbox_to_anchor=(0.12, 0))
+ax1.set_xscale('log')
+ax1.set_yscale('log')
+# ax1.set_legend()
+# yticks = list(ax1.get_yticks())
+# yticks.append(0)
+# ax1.set_yticks(yticks)
+# Create a secondary x-axis
+# ax1.set_ylim(1e-14, 1e1)
+# ax1.set_xlim(2e-15, 3e-11)
+secax = ax1.twiny()
+# Set the tick positions and labels for the secondary x-axis
+secax.set_xscale('log')
+xlims = ax1.get_xlim()
+secax.set_xlim(xlims)
+# major_ticks = np.geomspace(MHofk(1e13), MHofk(1e12), 2)  # Adjust the number of major ticks as needed
+# major_ticks = [MHofk(k) for k in [1e13, 1e12]]
+# major_ticks = np.geomspace(MH[-1], MH[0], 10)
+major_ticks = [MHofk(1e14),MHofk(1e13),MHofk(1e12)]  # Adjust the number of major ticks as needed
+# Use the conversion function to set the secondary x-axis tick labels
+secax.set_xticks(major_ticks)
+secax.set_xticklabels([format_func(tick, i) for i, tick in enumerate(major_ticks)])
+secax.set_xlabel(r'k [Mpc$^{-1}$]')
+secax.set_xlim(xlims)
+# formatter = FuncFormatter(format_ticks1)
+# plt.gca().yaxis.set_major_formatter(formatter)
+plt.tight_layout()
+# inset_ax = inset_axes(ax1, width="30%", height="30%", loc='upper left')
+# inset_ax.loglog(MH, f_mono_g_2,'-.',color='k')
+# inset_ax.loglog(MH, f_mono_resum_2, color='#00ABEB')
+# inset_ax.loglog(MH, f_mono_resum_4, color='tab:orange')
+# inset_ax.loglog(MH, f_mono_g_4,'-.',color='#8C2EB9')
+# # inset_ax.set_title('Inset')
+# inset_ax.set_ylim(1e-2, 1e1)
+# inset_ax.set_xlim(4.5e-13, 2.7e-12)
+# inset_ax.set_xticks([])
+# inset_ax.set_yticks([])
+# plt.savefig('betamono_ng_bothW.pdf')
+plt.show()
+
+
+fig, ax1 = plt.subplots()
+ax1.plot(MH, beta_ex_g_g4,'-.', color='tab:orange',label='Extended Wg4')
+ax1.plot(MH, beta_ex_g_tf, color='#00ABEB',label='Extended Wthtf')
+ax1.plot(MH, beta_mono_g_3,'--',color='#8C2EB9',  label='Monochromatic Wg4')
+ax1.plot(MH, beta_mono_g_1, linestyle=(0, (5, 2, 1, 2, 1, 2)) ,color='k',  label= 'Monochromatic Wthtf')
+
+ax1.set_title(f'Monochromatic and Extended PBH Abundance, Gaussian Statistics', pad=8)#, fontsize=16)
+ax1.set_xlabel(r'$M\, [M_\odot]$')
+ax1.set_ylabel(r'$\beta$')
+# plt.axhline(y=1, color='r', linestyle='--')
+ax1.legend(loc='lower left')#, bbox_to_anchor=(0.12, 0))
+ax1.set_xscale('log')
+ax1.set_yscale('log')
+# ax1.set_yticks(yticks)
+# Create a secondary x-axis
+ax1.set_ylim(1e-63, 1e-13)
+ax1.set_xlim(1e-17, 1e-10)
+secax = ax1.twiny()
+# Set the tick positions and labels for the secondary x-axis
+secax.set_xscale('log')
+xlims = ax1.get_xlim()
+secax.set_xlim(xlims)
+# major_ticks = np.geomspace(MHofk(1e13), MHofk(1e12), 2)  # Adjust the number of major ticks as needed
+# major_ticks = [MHofk(k) for k in [1e13, 1e12]]
+# major_ticks = np.geomspace(MH[-1], MH[0], 10)
+major_ticks = [MHofk(1e15),MHofk(1e14),MHofk(1e13),MHofk(1e12)]  # Adjust the number of major ticks as needed
+# Use the conversion function to set the secondary x-axis tick labels
+secax.set_xticks(major_ticks)
+secax.set_xticklabels([format_func(tick, i) for i, tick in enumerate(major_ticks)])
+secax.set_xlabel(r'k [Mpc$^{-1}$]')
+secax.set_xlim(xlims)
+# formatter = FuncFormatter(format_ticks1)
+# plt.gca().yaxis.set_major_formatter(formatter)
+plt.tight_layout()
+# plt.savefig('beta_monoex_g_bothW.pdf')
+plt.show()
+
+
+
+
+
+
+for i in n:
+    plt.plot(frac*MH, f_mono_g, label='Gaussian')
+    # plt.plot(frac*MH, f_mono_pert/fpbh_mono_pert,'o', label='pert')
+    plt.plot(frac*MH, f_mono_resum, label='non-Gaussian')
+    plt.xscale('log')
+    plt.yscale('log')
+    plt.xlabel(r'$M_{\rm PBH}\,/\,M_\odot$')
+    plt.legend()
+    plt.title(f'Monochromatic f(M), {Wf}, ' r'$\lambda_0=$' f'{L}')
+    plt.ylim(1e-14, 70)
+    plt.xlim(3e-14, 3e-10)
+    if frac == 1:
+        plt.xlabel(r'$M_H\,/\,M_\odot$')
+    else:
+        plt.xlabel(f'{frac}*' r'$M_H\,/\,M_\odot$')
+    # plt.axvline(x=frac*MHmax_mono, color='k')
+    # plt.axvline(x=frac*MHngmax, color='k', linestyle='--')
+    plt.show()
+    plt.plot( MH, f_ex_g, label='Gaussian')
+    # plt.plot(frac*MH, f_ex_pert/fpbh_ex_pert,'o', label='pert')
+    plt.plot( MH, f_ex_resum, label='non-Gaussian')
+    plt.xscale('log')
+    plt.yscale('log')
+    plt.xlabel(r'$M_{\rm PBH}\,/\,M_\odot$')
+    plt.ylabel(r'$f(M_{\rm PBH})$')
+    plt.legend()
+    plt.title(f'Extended PBH Mass Function, {Wf}, ' r'$\lambda_0=$' f'{L}')
+    plt.ylim(1e-18,80)
+    plt.xlim(1e-18, 3e-8)
+    plt.show()

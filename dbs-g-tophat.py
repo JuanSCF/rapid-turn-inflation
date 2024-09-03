@@ -23,10 +23,25 @@ import dask.array as da
 
 # power spectrum parameters
 dN=0.1
-n=1
-L=n*251.327
+# L = 251.327
+# L = 233.5963 # -> f_pbh = 0.9975 (wthtf,deltac=0.41) dtheta = 3.7178*np.pi
 k0 = 1e11 # Mpc^-1 . '''this gives k_peak=1.287e13 Mpc^-1'''
 # k0 = 1.7e9 # Mpc^-1 . '''this gives M_peak=1e-5 M_\odot'''
+
+# L = 233.158 # -> mono: f_peak = 0.9942 fpbh = 33.38%    d = x*np.pi
+# L = 233.716 # -> ex: fpeak = 0.9983 f_pbh = 89.12%    d = x*np.pi
+
+#################################################
+##################  Wthtf  ######################
+#################################################
+# L = 233.548 # fpbh_ex = 56.2174%, fpbh_mono = 99.8%, fpeak_ex = 0.6304, fpeak_mono = 2.927, max ps = 1.61e-2
+# L = 233.758 # fpbh_ex = 99.7919%, fpbh_mono = 176.136%, fpeak_ex = 1.118, fpeak_mono = 5.123, max ps = 1.62e-2
+#################################################
+###################  Wg4  #######################
+#################################################
+# L = 226.206 ##### # fpbh mono 99.752%, fpbh ex 41.6659%
+L = 226.518 ##### #fpbh mono 236.731%, fpbh ex 99.7571%
+#################################################
 
 # initial and final k that will be integrated
 ki=11
@@ -36,11 +51,11 @@ ki=3*10**ki
 kf=3*10**kf
 
 
-nkk=400 #number of steps. be careful with the number of steps. it can take a lot of time to compute. in my pc 400 steps takes ~1.2 hour. 250 may be a good number, taking like 15-20 mins
+nkk=350 #number of steps. be careful with the number of steps. it can take a lot of time to compute. in my pc 400 steps takes ~1.2 hour. 250 may be a good number, taking like 15-20 mins
 
 kk = np.geomspace(ki, kf, nkk,dtype='float64')
-k1=kk
-k2=kk
+k1 = kk
+k2 = kk
 
 #create array for x
 num_points = nkk//2  # Divide by 2 to cover the range from -1 to 1
@@ -57,14 +72,14 @@ cwd = os.getcwd()
 # parent_directory = os.path.dirname(cwd)
 
 # Define the directory where you want to save the file
-data_directory = os.path.join(cwd, 'data')
+# data_directory = os.path.join(cwd, 'data')
 
-# File name to save bs data
-databs_file = f'datadbs-gth-{nkk}-steps-{kikf}-lambda-{n}L0.npy'
+# # File name to save bs data
+# databs_file = f'datadbs-gth-{nkk}-steps-{kikf}-lambda-{n}L0.npy'
 
-# Construct the full path including the directory
-full_path = os.path.join(data_directory, databs_file)
-full_path = f'C:\ZZZ\Laburos\Codes\\newdata\datadbs-gth-{nkk}-steps-3e{kikf}-lambda-{n}L0.npy'
+# # Construct the full path including the directory
+# full_path = os.path.join(data_directory, databs_file)
+full_path = f'C:\ZZZ\Laburos\Codes\\newdata\datadbs-gth-{nkk}-steps-3e{kikf}-L-{L}.npy'
 
 # def wm(k):
 #     if k>k0*L:
@@ -237,7 +252,10 @@ np.save(full_path, databs)
 #         plt.show()
 
 
+# databs = np.load(full_path)
+
 print(f'ki: {ki:.0e}, kf: {kf:.0e}')
+print(f'L: {L}')
 print(' ')
 
 # Find the maximum value
@@ -249,8 +267,8 @@ print("Maximum value:", max_value)
 print("Position of maximum value:", max_index)
 
 
-print('k1_min: {:.2e}'.format(k1[max_index[0]]))
-print('k2_min: {:.2e}'.format(k2[max_index[1]]))
+print('k1_max: {:.2e}'.format(k1[max_index[0]]))
+print('k2_max: {:.2e}'.format(k2[max_index[1]]))
 print('x_max:', x[max_index[2]], 'degrees:', np.degrees(np.arccos(x[max_index[2]])))
 
 print(' ')
@@ -271,3 +289,4 @@ print(' ')
 
 print('Mean:', np.mean(databs))
 print('Standard deviation:', np.std(databs))
+
