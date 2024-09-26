@@ -291,7 +291,7 @@ kbs = kk[max_index[0]]
 gcritbsI = 6*varIk(kbs)**3/abs(xi3Ik(kbs))/(deltac**3)
 print(f'gcrit bs Interpolated = {gcritbsI:.4e}')
 
-n = 44 # n=30-35 makes a ng peak appear
+n = -1 # n=30-35 makes a ng peak appear
 g0 = gcrits *n
 g0 = gcritpzI *n 
 # g0 = 1
@@ -357,7 +357,6 @@ def format_func(value, tick_number):
 # secax = ax1.twiny()
 # # Set the tick positions and labels for the secondary x-axis
 # secax.set_xscale('log')
-
 # secax.set_xlim(ax1.get_xlim())
 # major_ticks = np.geomspace(MHsmall[-1], MHsmall[0], 5)  # Adjust the number of major ticks as needed
 # # Use the conversion function to set the secondary x-axis tick labels
@@ -398,6 +397,11 @@ ngmod = -(xi3)*deltac/varsmall**2/3.
 
 # sys.exit()
 
+if n==-1:
+    var=var[2499:3170]
+    xi3E=xi3E[2499:3170]
+    MH=MH[2499:3170]
+    LMH=LMH[2499:3170]
 #######################################
 ######### monochromatic plots #########
 #######################################
@@ -413,6 +417,7 @@ beta_mono_gsmall = 2*frac*varsmall**0.5/(deltac*np.sqrt(2*np.pi))*np.exp(-0.5*de
 beta_mono_pert = beta_mono_g*(1+g0*(xi3E)*(deltac/var)**3/6)
 beta_mono_pertsmall = beta_mono_gsmall*(1+g0*(xi3)*(deltac/varsmall)**3/6)
 
+beta_mono_resum = 2*frac*var**0.5/(deltac*np.sqrt(2*np.pi))*np.exp(-0.5*deltac**2/var+g0*(xi3E)*(deltac/var)**3/6)
 beta_mono_resum = beta_mono_g*np.exp(g0*(xi3E)*(deltac/var)**3/6)
 beta_mono_resumsmall = beta_mono_gsmall*np.exp(g0*(xi3)*(deltac/varsmall)**3/6)
 
@@ -450,6 +455,8 @@ beta_mono_resumsmall = beta_mono_gsmall*np.exp(g0*(xi3)*(deltac/varsmall)**3/6)
 
 
 # monochromatic f
+# f_mono_resum[np.isnan(f_mono_resum)] = 0
+# f_mono_resum[np.isinf(f_mono_resum)] = 0
 
 f_mono_g = OmegaCDM**-1*(Meq/(frac*MH))**0.5*beta_mono_g
 f_mono_gsmall = OmegaCDM**-1*(Meq/(frac*MHsmall))**0.5*beta_mono_gsmall
@@ -515,7 +522,7 @@ plt.plot(frac*MH, f_mono_g, label='Gaussian')
 plt.plot(frac*MH, f_mono_resum, label='non-Gaussian')
 plt.xscale('log')
 plt.yscale('log')
-plt.xlabel(r'$M_{\rm PBH}\,/\,M_\odot$')
+plt.ylabel(r'$f(M)$')
 plt.legend()
 plt.title(f'Monochromatic f(M), {Wf}, ' r'$\lambda_0=$' f'{L}')
 plt.ylim(1e-14, 70)
@@ -1522,8 +1529,8 @@ plt.show()
 
 
 fig, ax1 = plt.subplots()
-ax1.plot(MH, f_ex_g_2,'-.',color='k',  label=r'Wthtf, $f_{\rm \, PBH, ex}^{\,G}=$'f'{fpbh_ex_g_2:.3}'[:-1])
-ax1.plot(MH, f_ex_resum_2, color='#00ABEB',label=r'Wthtf, $f_{\rm PBH, ex}^{\,NG}=$'f'{fpbh_ex_resum_2:.3}'[:-1])
+ax1.plot(MH, f_ex_g_2,linestyle=(0, (5, 2, 1, 2, 1, 2)),color='k',  label=r'Wthtf, $f_{\rm \, PBH, ex}^{\,G}=$'f'{fpbh_ex_g_2:.3}'[:-1])
+ax1.plot(MH, f_ex_resum_2,'--', color='#00ABEB',label=r'Wthtf, $f_{\rm PBH, ex}^{\,NG}=$'f'{fpbh_ex_resum_2:.3}'[:-1])
 ax1.plot(MH, f_ex_g_4,'-.',color='#8C2EB9',  label=r'Wg4, $f_{\rm \, PBH, ex}^{\,G}=$'f'{fpbh_ex_g_4:.3}'[:-1])
 ax1.plot(MH, f_ex_resum_4, color='tab:orange',label=r'Wg4, $f_{\rm PBH, ex}^{\,NG}=$'f'{fpbh_ex_resum_4:.3}'[:-1])
 ax1.set_title(f'Extended PBH Mass Function Comparison', pad=8)#, fontsize=16)
@@ -1557,16 +1564,17 @@ secax.set_xlim(xlims)
 # formatter = FuncFormatter(format_ticks1)
 # plt.gca().yaxis.set_major_formatter(formatter)
 plt.tight_layout()
-# plt.savefig('fex_ng_bothW.pdf')
+plt.savefig('fex_ng_bothW_cb.pdf')
 plt.show()
 
 
 
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
+from matplotlib.ticker import LogLocator, NullFormatter
 # ARREGLAR TICKS!!!!!!!!!
 fig, ax1 = plt.subplots()
-ax1.plot(MH, f_mono_g_1,'-.',color='k',  label=r'Wthtf, $f_{\rm \, PBH, mc}^{\,G}=$'f'{fpbh_mono_g_1:.3}'[:-1])
-ax1.plot(MH, f_mono_resum_1, color='#00ABEB',label=r'Wthtf, $f_{\rm PBH, mc}^{\,NG}=$'f'{fpbh_mono_resum_1:.3}'[:-1])
+ax1.plot(MH, f_mono_g_1,linestyle=(0, (5, 2, 1, 2, 1, 2)),color='k',  label=r'Wthtf, $f_{\rm \, PBH, mc}^{\,G}=$'f'{fpbh_mono_g_1:.3}'[:-1])
+ax1.plot(MH, f_mono_resum_1,'--', color='#00ABEB',label=r'Wthtf, $f_{\rm PBH, mc}^{\,NG}=$'f'{fpbh_mono_resum_1:.3}'[:-1])
 ax1.plot(MH, f_mono_g_3,'-.',color='#8C2EB9',  label=r'Wg4, $f_{\rm \, PBH, mc}^{\,G}=$'f'{fpbh_mono_g_3:.3}'[:-1])
 ax1.plot(MH, f_mono_resum_3, color='tab:orange',label=r'Wg4, $f_{\rm PBH, mc}^{\,NG}=$'f'{fpbh_mono_resum_3:.3}'[:-1])
 ax1.set_title(f'Monochromatic PBH Mass Function Comparison', pad=8)#, fontsize=16)
@@ -1599,18 +1607,27 @@ secax.set_xlabel(r'k [Mpc$^{-1}$]')
 secax.set_xlim(xlims)
 # formatter = FuncFormatter(format_ticks1)
 # plt.gca().yaxis.set_major_formatter(formatter)
+# secax.xaxis.set_minor_locator(LogLocator())  # Use log-based tick locations
+# secax.xaxis.set_minor_formatter(NullFormatter())  # Disable minor tick labels
 plt.tight_layout()
-# inset_ax = inset_axes(ax1, width="30%", height="30%", loc='upper left')
-# inset_ax.loglog(MH, f_mono_g_2,'-.',color='k')
-# inset_ax.loglog(MH, f_mono_resum_2, color='#00ABEB')
-# inset_ax.loglog(MH, f_mono_resum_4, color='tab:orange')
-# inset_ax.loglog(MH, f_mono_g_4,'-.',color='#8C2EB9')
-# # inset_ax.set_title('Inset')
-# inset_ax.set_ylim(1e-2, 1e1)
-# inset_ax.set_xlim(4.5e-13, 2.7e-12)
-# inset_ax.set_xticks([])
+# inset_ax = inset_axes(ax1, width="40%", height="40%", loc='upper left')
+# Adjust the bbox_to_anchor values for better positioning
+inset_ax = inset_axes(ax1, width="40%", height="40%", loc='upper left', bbox_to_anchor=(0.08, -0.01, 1, 1), bbox_transform=ax1.transAxes)
+inset_ax.loglog(MH, f_mono_g_2,linestyle=(0, (5, 2, 1, 2, 1, 2)),color='k')
+inset_ax.loglog(MH, f_mono_resum_2, '--', color='#00ABEB')
+inset_ax.loglog(MH, f_mono_resum_4, color='tab:orange')
+inset_ax.loglog(MH, f_mono_g_4,'-.',color='#8C2EB9')
+
+# inset_ax.set_title('Inset')
+inset_ax.set_ylim(1e-1, 1e1)
+inset_ax.set_xlim(4.5e-13, 2.7e-12)
+# inset_ax.set_xticks([4e-13,2e-12])
+# Remove minor ticks (if you don't want them)
+# inset_ax.xaxis.set_minor_locator(LogLocator())  # Use log-based tick locations
+# inset_ax.xaxis.set_minor_formatter(NullFormatter())  # Disable minor tick labels
+# inset_ax.set_xticklabels([r'$4 \times 10^{-13}$', r'$2 \times 10^{-12}$'])
 # inset_ax.set_yticks([])
-# plt.savefig('fmono_ng_bothW.pdf')
+plt.savefig('fmono_ng_bothW_inset_cb.pdf')
 plt.show()
 
 

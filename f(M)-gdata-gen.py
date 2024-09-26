@@ -37,7 +37,7 @@ k00 = 1e11 # Mpc^-1
 ####################
 #################################################
 L = 233.548 # fpbh_ex = 56.2174%, fpbh_mono = 99.8%, fpeak_ex = 0.6304, fpeak_mono = 2.927, max ps = 1.61e-2
-L = 233.758 # fpbh_ex = 99.7919%, fpbh_mono = 176.136%, fpeak_ex = 1.118, fpeak_mono = 5.123, max ps = 1.62e-2
+# L = 233.758 # fpbh_ex = 99.7919%, fpbh_mono = 176.136%, fpeak_ex = 1.118, fpeak_mono = 5.123, max ps = 1.62e-2
 #################################################
 ####################
 # L = 233.5487 # fpbh_ex = 56.3266%, fpbh_mono = 99.9961%, fpeak_ex = 0.6316, fpeak_mono = 2.932, max ps = 1.61e-2
@@ -59,16 +59,16 @@ L = 233.758 # fpbh_ex = 99.7919%, fpbh_mono = 176.136%, fpeak_ex = 1.118, fpeak_
 # L = 226.204 # fpbh mono 97.6%, fpbh ex 40.7%
 # L = 226.208 # fpbh mono 100.313%, fpbh ex 41.9%
 #################################
-L = 226.206 ##### # fpbh mono 99.752%, fpbh ex 41.6659%
-L = 226.518 ##### #fpbh mono 236.731%, fpbh ex 99.7571%
+# L = 226.206 ##### # fpbh mono 99.752%, fpbh ex 41.6659%
+# L = 226.518 ##### #fpbh mono 236.731%, fpbh ex 99.7571%
 #################################
 # L = 226.519 # fpbh mono 237.38%, fpbh ex 100.033%
 #################################
 ############  Wth  ##############
 #################################
-L=228.21 # Wth, fpbh mono=99.87%, fpbh ex=56.3%
+# L=228.21 # Wth, fpbh mono=99.87%, fpbh ex=56.3%
 # L=228.404 # Wth, fpbh mono=17x%, fpbh ex=99.67%
-L=228.405 # Wth, fpbh mono=176.2%, fpbh ex=99.98%
+# L=228.405 # Wth, fpbh mono=176.2%, fpbh ex=99.98%
 
 # k00 = 1.57e7 # this is for Mpeak~1e-5
 
@@ -85,7 +85,7 @@ L=228.405 # Wth, fpbh mono=176.2%, fpbh ex=99.98%
 size = 4000
 nps = 15000
 
-Wf='Wth' # remember to change deltac and W2 in sigmaR2 calc below line~370
+Wf='Wthtf' # remember to change deltac and W2 in sigmaR2 calc below line~370
 #sigma line~400
 
 if Wf=='Wg4' or 'Wth':
@@ -298,8 +298,9 @@ cmbPS = Acmb*(k0/Kpivot)**(ns-1)
 #plt.plot(kr,np.exp(Pappr(Lkr)),'--')
 # plt.plot(k0,np.exp(PfkL(Lk0)),'r')
 # plt.plot(k0,PfkE, color = 'g',linestyle = '--')
-plt.plot(k0,Pfk(Lk0), label=r'$P_{\rm \mathcal R}$')
-plt.plot(k0,cmbPS,'r--', label=r'$P_{\rm CMB}$')
+plt.plot(k0,Pfk(Lk0), lw=1.3, label=r'$P_{\rm \mathcal R},\,\lambda_0=233.548$')
+# plt.loglog(q0, Pq45, lw=1.3, label=r'$P_{\rm \mathcal R},\,\lambda_0=45.4108$')#, linestyle='-.')
+plt.plot(k0,cmbPS,'k--', lw=1.3, label=r'$P_{\rm CMB}$')
 plt.axhline(y=1e-2, color='purple', linewidth=1)
 plt.yscale('log')
 plt.xscale('log')
@@ -308,9 +309,9 @@ plt.xlim(1e7,1e15)
 ylims = plt.gca().get_ylim()
 plt.fill_betweenx([1e-2, 1], 1, 1e15, color='purple', alpha=0.27)
 plt.ylim(ylims)
-plt.xlabel(r'$k\,\left[Mpc^{-1} \right]$')
+plt.xlabel(r'$k\,\left[{\rm Mpc}^{-1} \right]$')
 plt.legend(loc='upper left', bbox_to_anchor=(0, 0.897))
-# plt.savefig('Pz-Pcmb.pdf')
+# plt.savefig('Pz-Pcmb2k.pdf')
 plt.show()
 
 
@@ -425,9 +426,9 @@ for i in tqdm.tqdm(range(0, nkz)):
     # W2[i,:] = np.exp(-0.25*(q[:]/kz[i])**2)# Gaussian 4
     # W2[i,:] = np.exp(-0.25*(q[:]/kz[i])**2)*(3.*(np.sin(csrad*q[:]/kz[i])-csrad*q[:]/kz[i]*np.cos(csrad*q[:]/kz[i]))/(csrad*q[:]/kz[i])**3.) # Gaussian 4 + transfer
     # top-hat
-    W2[i,:] = 3.*(np.sin(q[:]/kz[i])-q[:]/kz[i]*np.cos(q[:]/kz[i]))/(q[:]/kz[i])**3. # top-hat
+    # W2[i,:] = 3.*(np.sin(q[:]/kz[i])-q[:]/kz[i]*np.cos(q[:]/kz[i]))/(q[:]/kz[i])**3. # top-hat
     # wthtf
-    # W2[i,:] = (3.*(np.sin(q[:]/kz[i])-q[:]/kz[i]*np.cos(q[:]/kz[i]))/(q[:]/kz[i])**3.)*(3.*(np.sin(csrad*q[:]/kz[i])-csrad*q[:]/kz[i]*np.cos(csrad*q[:]/kz[i]))/(csrad*q[:]/kz[i])**3.)
+    W2[i,:] = (3.*(np.sin(q[:]/kz[i])-q[:]/kz[i]*np.cos(q[:]/kz[i]))/(q[:]/kz[i])**3.)*(3.*(np.sin(csrad*q[:]/kz[i])-csrad*q[:]/kz[i]*np.cos(csrad*q[:]/kz[i]))/(csrad*q[:]/kz[i])**3.)
     W2[i,:] = (W2[i,:])**2
     integrand[i,:] = (16./81.)*Pfk(Lq[:])*W2[i,:]*(q[:])**3./(keq)**4. *(Mz[i]/Meq)**2
     sigmaR2[i]=Intarray_vec(integrand[i,:]*q[:],Lq[:])
@@ -983,7 +984,7 @@ secax.set_xlabel(r'k [Mpc$^{-1}$]')
 ax1.set_ylim(1e-12, 1e-1)
 ax1.set_xlim(1e-17, 1e1)
 plt.tight_layout()
-plt.savefig('var.pdf')
+# plt.savefig('var.pdf')
 plt.show()
 
 
@@ -1019,7 +1020,7 @@ secax.set_xlabel(r'k [Mpc$^{-1}$]')
 ax1.set_ylim(1e-12, 1e-1)
 ax1.set_xlim(1e-17, 1e1)
 plt.tight_layout()
-plt.savefig('var2.pdf')
+# plt.savefig('var2.pdf')
 plt.show()
 
 
