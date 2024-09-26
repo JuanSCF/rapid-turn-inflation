@@ -14,9 +14,8 @@ import matplotlib.pyplot as plt
 
 # power spectrum parameters
 deltaN=0.1
-n=1
-L0=251.327
-L=n*L0
+# L = 251.327
+
 k0 = 1e11 # Mpc^-1 . '''this gives k_peak=1.287e13 Mpc^-1'''
 
 # L = 213.628
@@ -25,23 +24,37 @@ k0 = 1e11 # Mpc^-1 . '''this gives k_peak=1.287e13 Mpc^-1'''
 # L = 163.363
 # k00 = 2.05e4 # this is for Mpeak~1e1 M_\odot
 
+# L = 233.158 # -> wthtf, 0.41 mono: f_peak = 0.997 fpbh = 33.47%    d = x*np.pi
+# L = 233.716 # -> wthtf, 0.41 ex: fpeak = 0.9983 f_pbh = 89.12%    d = x*np.pi
+
+##################  Wthtf  ######################
+# L = 233.548 # fpbh_ex = 56.2174%, fpbh_mono = 99.8%, fpeak_ex = 0.6304, fpeak_mono = 2.927, max ps = 1.61e-2
+# L = 233.758 # fpbh_ex = 99.7919%, fpbh_mono = 176.136%, fpeak_ex = 1.118, fpeak_mono = 5.123, max ps = 1.62e-2
+#################################################
+
+###################  Wg4  #######################
+L = 226.206 ##### # fpbh mono 99.752%, fpbh ex 41.6659%
+# L = 226.518 ##### #fpbh mono 236.731%, fpbh ex 99.7571%
+#################################################
+
 # initial and final k that will be integrated
-ki = 10
-kf = 13
+ki = 11
+kf = 15
 
 
 kikf=str(ki)+str(kf)
 ki = 3*10**ki 
 kf = 3*10**kf
+
+Wf='Wthtf' # Wg, Wg4, Wth, Wthtf 
+
+
+nkk = 350 # number of steps
+size = 4000
+
+
+print(f'L = {L} \n size = {size} \n nkk = {nkk}')
 print(f'ki: {ki:.0e}, kf: {kf:.0e}')
-
-
-Wf='Wg4' # Wg, Wg4, Wth, Wthtf 
-
-
-nkk=350 #number of steps
-size=3000
-
 
 kk = np.geomspace(ki, kf, nkk, dtype='float64')
 # kk = np.linspace(ki, kf, nkk,dtype='float64', endpoint=False)
@@ -76,16 +89,16 @@ cwd = os.getcwd()
 data_directory = os.path.join(cwd, 'data')
 
 # File name to save bs data
-databs_file = f'databs-gth-{nkk}-steps-{kikf}-lambda-{n}L0.npy'
+# databs_file = f'databs-gth-{nkk}-steps-{kikf}-lambda-{n}L0.npy'
 
 # Construct the full path including the directory
-databs_file = os.path.join(data_directory, databs_file)
-# databs = np.load(f'C:\ZZZ\Laburos\Codes\\newdata\databs-gth-{nkk}-steps-{kikf}-lambda-{n}L0.npy')
-databs = np.load(f'C:\ZZZ\Laburos\Codes\\newdata\datadbs-gth-{nkk}-steps-3e{kikf}-lambda-{n}L0.npy')
+# databs_file = os.path.join(data_directory, databs_file)
+# databs = np.load(f'C:\ZZZ\Laburos\Codes\\newdata\datadbs-gth-{nkk}-steps-3e{kikf}-lambda-{n}L0.npy')
+databs = np.load(f'C:\ZZZ\Laburos\Codes\\newdata\datadbs-gth-{nkk}-steps-3e{kikf}-L-{L}.npy')#{n}L0.npy')
 
 # File name to save xi3 data
 # xi3_file=f'xi3-gth-{Wf}-{nkk}-steps-{kikf}-lambda-{n}L0'
-xi3_file=f'xi3d-gth-{Wf}-{nkk}-steps-3e{kikf}-lambda-{n}L0'
+xi3_file=f'xi3d-gth-{Wf}-{nkk}-steps-3e{kikf}-L-{L}'#{n}L0'#
 
 xi3_file = os.path.join(data_directory, xi3_file)
 
@@ -154,12 +167,17 @@ print(' ')
     
 
 # np.savez(cwd+'\\bs\\data\\gaussian-data-C'+str(C)+'-deltac'+str(deltac)+Wf+'.npz', kz=kz, sigmaR2=sigmaR2, f=f, fpeak=fpeak, OmegaPBH=OmegaPBH, Mp=Mp)
+# np.savez( fgaussian_data_file, kz=kz, sigmaR2=sigmaR2, kpz=k0, pz=PfkE, fmono=fmono, fex=f)
 
-fgaussian_data_file = os.path.join(cwd, f'data\\gaussian-data-{Wf}.npz')
+fgaussian_data_file = os.path.join(cwd, f'data\\gaussian-data-{Wf}-L-{L}.npz')
 fgaussian_data = np.load(fgaussian_data_file)
 
-kz=fgaussian_data['kz']
-sigmaR2=fgaussian_data['sigmaR2']
+kz = fgaussian_data['kz']
+sigmaR2 = fgaussian_data['sigmaR2']
+# pz = fgaussian_data['pz']
+# fmono = fgaussian_data['fmono']
+# fex = fgaussian_data['fex']
+
 MH = MHofk(kz)
 
 kzsmall =np.zeros(nkk)
@@ -320,5 +338,12 @@ plt.xscale('log')
 plt.yscale('symlog')
 # plt.legend()
 plt.yticks(list(plt.yticks()[0]) + [0])
+plt.xlim(1e-19, 3e-9)
 # plt.savefig(f'skewness-vs-k-{Wf}-1e10-1e15.pdf')
 plt.show()
+
+
+print(f'L = {L} \n size = {size} \n nkk = {nkk}')
+print(f'ki: {ki:.0e}, kf: {kf:.0e}')
+print(f' ')
+print(f'gcrit = {gcrit:.2e}, wf = {Wf}, deltac = {deltac}')
