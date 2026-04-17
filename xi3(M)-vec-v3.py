@@ -36,6 +36,12 @@ k0 = 1e11 # Mpc^-1 . '''this gives k_peak=1.287e13 Mpc^-1'''
 L = 226.206 ##### # fpbh mono 99.752%, fpbh ex 41.6659%
 # L = 226.518 ##### #fpbh mono 236.731%, fpbh ex 99.7571%
 #################################################
+L=229.413 # wg4 0.41
+L=229.626 # wg4 0.41
+L=228.80 # wg4,deltac=0.4, fpbh mono=99.7753 %, fpbh ex=55.746%
+L=229.025 # wg4,deltac=0.4, fpbh mono=177.77%, fpbh ex=99.9132%
+L=232.963 # wthtf, 0.4
+# L = 233.174 # wthtf, 0.4
 
 # initial and final k that will be integrated
 ki = 11
@@ -46,7 +52,7 @@ kikf=str(ki)+str(kf)
 ki = 3*10**ki 
 kf = 3*10**kf
 
-Wf='Wthtf' # Wg, Wg4, Wth, Wthtf 
+Wf='Wg4' # Wg, Wg4, Wth, Wthtf 
 
 
 nkk = 350 # number of steps
@@ -130,12 +136,12 @@ def MHofk(k):
 
 # Gaussian4
 if Wf=='Wg4':
-    deltac = 0.18
+    deltac = 0.4
     def W(k,q):    
         return np.exp(-0.25*(k/q)**2.)     
 # tophat+transfer
 elif Wf=='Wthtf':
-    deltac = 0.41
+    deltac = 0.4
     csrad=np.sqrt(1./3.)
     def W(k,q):
         a=3.*(np.sin(k/q)-k/q*np.cos(k/q))/(k/q)**3. 

@@ -39,6 +39,8 @@ k00 = 1e11 # Mpc^-1
 L = 233.548 # fpbh_ex = 56.2174%, fpbh_mono = 99.8%, fpeak_ex = 0.6304, fpeak_mono = 2.927, max ps = 1.61e-2
 # L = 233.758 # fpbh_ex = 99.7919%, fpbh_mono = 176.136%, fpeak_ex = 1.118, fpeak_mono = 5.123, max ps = 1.62e-2
 #################################################
+L = 232.963 # wthtf 0.4, fpbh_mono = 99.8215%, fpbh_ex = 55.7307%, 
+# L = 233.174 # wthtf 0.4, fpbh_mono = 177.83%, fpbh_ex = 99.8719%, 
 ####################
 # L = 233.5487 # fpbh_ex = 56.3266%, fpbh_mono = 99.9961%, fpeak_ex = 0.6316, fpeak_mono = 2.932, max ps = 1.61e-2
 # L = 233.5488 # fpbh_ex = 56.3423%, fpbh_mono = 100.024%, fpeak_ex = 0.6318, fpeak_mono = 2.933, max ps = 1.61e-2
@@ -55,6 +57,11 @@ L = 233.548 # fpbh_ex = 56.2174%, fpbh_mono = 99.8%, fpeak_ex = 0.6304, fpeak_mo
 #################################
 ############  Wg4  ##############
 #################################
+# L=228.80 # wg4,deltac=0.4, fpbh mono=99.7753 %, fpbh ex=55.746%
+# L=229.025 # wg4,deltac=0.4, fpbh mono=177.77%, fpbh ex=99.9132%
+## # ##
+# L=229.413 # wg4,deltac=0.41, fpbh mono=99.8241 %, fpbh ex=56.2704%
+# L=229.626 # wg4,deltac=0.41, fpbh mono=176.067%, fpbh ex=99.8274%
 # L = 226.188 # fpbh mono 94.8%, fpbh ex 39.6%
 # L = 226.204 # fpbh mono 97.6%, fpbh ex 40.7%
 # L = 226.208 # fpbh mono 100.313%, fpbh ex 41.9%
@@ -88,10 +95,10 @@ nps = 15000
 Wf='Wthtf' # remember to change deltac and W2 in sigmaR2 calc below line~370
 #sigma line~400
 
-if Wf=='Wg4' or 'Wth':
-  deltac = 0.41
+if Wf=='Wthtf' or 'Wth':
+  deltac = 0.4
 if Wf=='Wg4':
-  deltac = 0.18
+  deltac = 0.4
 
 gamma=0.36
 C=4.
@@ -298,7 +305,7 @@ cmbPS = Acmb*(k0/Kpivot)**(ns-1)
 #plt.plot(kr,np.exp(Pappr(Lkr)),'--')
 # plt.plot(k0,np.exp(PfkL(Lk0)),'r')
 # plt.plot(k0,PfkE, color = 'g',linestyle = '--')
-plt.plot(k0,Pfk(Lk0), lw=1.3, label=r'$P_{\rm \mathcal R},\,\lambda_0=233.548$')
+plt.plot(k0,Pfk(Lk0), lw=1.3, label=r'$P_{\rm \mathcal R},\,\lambda_0=$'f'{L}')
 # plt.loglog(q0, Pq45, lw=1.3, label=r'$P_{\rm \mathcal R},\,\lambda_0=45.4108$')#, linestyle='-.')
 plt.plot(k0,cmbPS,'k--', lw=1.3, label=r'$P_{\rm CMB}$')
 plt.axhline(y=1e-2, color='purple', linewidth=1)
@@ -429,6 +436,8 @@ for i in tqdm.tqdm(range(0, nkz)):
     # W2[i,:] = 3.*(np.sin(q[:]/kz[i])-q[:]/kz[i]*np.cos(q[:]/kz[i]))/(q[:]/kz[i])**3. # top-hat
     # wthtf
     W2[i,:] = (3.*(np.sin(q[:]/kz[i])-q[:]/kz[i]*np.cos(q[:]/kz[i]))/(q[:]/kz[i])**3.)*(3.*(np.sin(csrad*q[:]/kz[i])-csrad*q[:]/kz[i]*np.cos(csrad*q[:]/kz[i]))/(csrad*q[:]/kz[i])**3.)
+    # transfer only
+    # W2[i,:] = (3.*(np.sin(csrad*q[:]/kz[i])-csrad*q[:]/kz[i]*np.cos(csrad*q[:]/kz[i]))/(csrad*q[:]/kz[i])**3.)
     W2[i,:] = (W2[i,:])**2
     integrand[i,:] = (16./81.)*Pfk(Lq[:])*W2[i,:]*(q[:])**3./(keq)**4. *(Mz[i]/Meq)**2
     sigmaR2[i]=Intarray_vec(integrand[i,:]*q[:],Lq[:])
